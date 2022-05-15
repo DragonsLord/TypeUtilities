@@ -28,7 +28,6 @@ internal class PickTypeConfig
         if (attributeData is null)
             return null;
 
-        // TODO: move to a separate step?
         if (attributeData.ConstructorArguments.Length == 0)
             return null;
 
@@ -51,39 +50,4 @@ internal class PickTypeConfig
 
         return new PickTypeConfig(sourceTypeSymbol, targetTypeSymbol, fields, includeBaseTypes);
     }
-
-    #region Comparer
-    public static IEqualityComparer<PickTypeConfig> Comparer = new EqualityComparer();
-
-    private class EqualityComparer : IEqualityComparer<PickTypeConfig>
-    {
-        private static SymbolEqualityComparer symbolComparer = SymbolEqualityComparer.Default;
-
-        public bool Equals(PickTypeConfig x, PickTypeConfig y)
-        {
-            return  symbolComparer.Equals(x.Source, y.Source) &&
-                    symbolComparer.Equals(x.Target, y.Target) &&
-                    x.IncludeBaseTypes == y.IncludeBaseTypes  &&
-                    IsFieldsEquals(x.Fields, y.Fields);
-        }
-
-        public int GetHashCode(PickTypeConfig obj)
-        {
-            return  symbolComparer.GetHashCode(obj.Source) ^
-                    symbolComparer.GetHashCode(obj.Target) ^
-                    obj.IncludeBaseTypes.GetHashCode()     ^
-                    obj.Fields.GetHashCode();
-        }
-
-        private bool IsFieldsEquals(string[] x, string[] y)
-        {
-            return
-                (x == y) ||
-                (
-                    x.Length == y.Length &&
-                    Enumerable.Range(0, x.Length).All(i => x[i] == y[i])
-                );
-        }
-    }
-    #endregion
 }

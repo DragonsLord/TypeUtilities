@@ -27,7 +27,7 @@ public class SourceType : Base
     public CustomType SrcType => CustomType.First;
 }
 
-[Pick(typeof(SourceType), "Id", nameof(SourceType.BaseType), IncludeBaseTypes = true)]
+[Pick(typeof(SourceType), "Id", nameof(SourceType.BaseType))]
 public partial class TargetType
 {
     public double AdditionalValue { get; set; }
