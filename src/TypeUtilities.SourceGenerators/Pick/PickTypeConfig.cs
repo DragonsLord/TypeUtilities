@@ -9,11 +9,12 @@ internal class PickTypeConfig
     public string[] Fields { get; }
     public bool IncludeBaseTypes { get; set; }
 
-    private PickTypeConfig(INamedTypeSymbol source, INamedTypeSymbol target, string[] fields)
+    private PickTypeConfig(INamedTypeSymbol source, INamedTypeSymbol target, string[] fields, bool includeBaseTypes)
     {
         Source = source;
         Target = target;
         Fields = fields;
+        IncludeBaseTypes = includeBaseTypes;
     }
 
     public static PickTypeConfig? Create(INamedTypeSymbol attributeSymbol, INamedTypeSymbol targetTypeSymbol)
@@ -48,7 +49,7 @@ internal class PickTypeConfig
         var includeBaseTypes = namedArgs.GetParamValue("IncludeBaseTypes", true);
         fields = namedArgs.GetParamValues("Fields", fields);
 
-        return new PickTypeConfig(sourceTypeSymbol, targetTypeSymbol, fields);
+        return new PickTypeConfig(sourceTypeSymbol, targetTypeSymbol, fields, includeBaseTypes);
     }
 
     #region Comparer
@@ -60,15 +61,17 @@ internal class PickTypeConfig
 
         public bool Equals(PickTypeConfig x, PickTypeConfig y)
         {
-            return symbolComparer.Equals(x.Source, y.Source) &&
+            return  symbolComparer.Equals(x.Source, y.Source) &&
                     symbolComparer.Equals(x.Target, y.Target) &&
+                    x.IncludeBaseTypes == y.IncludeBaseTypes  &&
                     IsFieldsEquals(x.Fields, y.Fields);
         }
 
         public int GetHashCode(PickTypeConfig obj)
         {
-            return symbolComparer.GetHashCode(obj.Source) ^
+            return  symbolComparer.GetHashCode(obj.Source) ^
                     symbolComparer.GetHashCode(obj.Target) ^
+                    obj.IncludeBaseTypes.GetHashCode()     ^
                     obj.Fields.GetHashCode();
         }
 

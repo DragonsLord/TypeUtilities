@@ -77,4 +77,22 @@ internal static class Extensions
         }
         return defaultValue;
     }
+
+    public static ISymbol? GetMember(this ITypeSymbol typeSymbol, string name, bool includeBase)
+    {
+        var directMember = typeSymbol.GetMembers(name).FirstOrDefault();
+
+        if (directMember is not null || !includeBase)
+            return directMember;
+
+        var currSymbol = typeSymbol.BaseType;
+        while (currSymbol is not null)
+        {
+            var member = currSymbol.GetMembers(name).FirstOrDefault();
+            if (member is not null)
+                return member;
+        }
+
+        return null;
+    }
 }

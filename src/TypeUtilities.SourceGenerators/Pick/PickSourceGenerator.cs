@@ -61,27 +61,27 @@ internal class PickSourceGenerator : IIncrementalGenerator
 
         // Generate the source using the compilation and enums
         context.RegisterSourceOutput(attributes, static (context, tuple) => {
-            var mapping = tuple.Left!;
+            var config = tuple.Left!;
             var types = tuple.Right!;
 
             // TODO: support base class members
-            var pickedMembers = mapping.Fields
-                .Select(f => mapping.Source.GetMembers(f).FirstOrDefault());
+            var pickedMembers = config.Fields
+                .Select(f => config.Source.GetMember(f, config.IncludeBaseTypes));
 
-            var targetTypeSyntax = types[mapping.Target.ToDisplayString()];
+            var targetTypeSyntax = types[config.Target.ToDisplayString()];
 
             var sourceBuilder = new StringBuilder();
 
-            if (!mapping.Target.ContainingNamespace.IsGlobalNamespace)
+            if (!config.Target.ContainingNamespace.IsGlobalNamespace)
             {
-                var @namespace = mapping.Target.ContainingNamespace.ToDisplayString();
+                var @namespace = config.Target.ContainingNamespace.ToDisplayString();
 
                 sourceBuilder.AppendLine($"namespace {@namespace};\n");
             }
 
             // TODO: proper conversion
-            var accessability = mapping.Target.DeclaredAccessibility.ToString().ToLower();
-            var targetName = mapping.Target.Name;
+            var accessability = config.Target.DeclaredAccessibility.ToString().ToLower();
+            var targetName = config.Target.Name;
 
             sourceBuilder.AppendLine($"{targetTypeSyntax.Modifiers} {targetTypeSyntax.Keyword} {targetName}");
             sourceBuilder.AppendLine("{");

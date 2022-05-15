@@ -7,7 +7,7 @@ public static class Program
 {
     public static void Main(string[] args)
     {
-        // var val = new TargetType().SrcType;
+        var val = new TargetType();
         var props = typeof(TargetType).GetProperties().Select(p => $"{p.PropertyType.Name} {p.Name}").ToArray();
         Console.WriteLine(string.Join(", ", props));
     }
@@ -27,8 +27,7 @@ public class SourceType : Base
     public CustomType SrcType => CustomType.First;
 }
 
-[Pick(typeof(SourceType), "Id", nameof(Base.BaseType),
-    IncludeBaseTypes = false)]
+[Pick(typeof(SourceType), "Id", nameof(SourceType.BaseType), IncludeBaseTypes = true)]
 public partial class TargetType
 {
     public double AdditionalValue { get; set; }
