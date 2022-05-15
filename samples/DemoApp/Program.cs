@@ -3,12 +3,11 @@ using TypeUtilities;
 
 namespace DemoApp;
 
-//Console.WriteLine("Hello World");
 public static class Program
 {
     public static void Main(string[] args)
     {
-        //var val = new TargetType().Id;
+        // var val = new TargetType().SrcType;
         var props = typeof(TargetType).GetProperties().Select(p => $"{p.PropertyType.Name} {p.Name}").ToArray();
         Console.WriteLine(string.Join(", ", props));
     }
@@ -25,12 +24,12 @@ public class SourceType : Base
     public int Value { get; set; }
     public DateTime Created { get; set; }
 
-    public CustomType SrcType => CustomType.Second;
+    public CustomType SrcType => CustomType.First;
 }
 
-[Pick(typeof(SourceType), "Id", nameof(SourceType.SrcType))]
+[Pick(typeof(SourceType), "Id", nameof(Base.BaseType),
+    IncludeBaseTypes = false)]
 public partial class TargetType
 {
-    public int MyProperty { get; set; }
-    public CustomType NonTrivial { get; set; }
+    public double AdditionalValue { get; set; }
 }
