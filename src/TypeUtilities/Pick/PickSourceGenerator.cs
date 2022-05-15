@@ -1,24 +1,56 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
+using System.Diagnostics;
 using System.Text;
 using System.Text.RegularExpressions;
 
 namespace TypeUtilities.Pick;
 
-internal class TypeMapping
+internal class PickTypeMapping
 {
     public INamedTypeSymbol Source { get; set; }
     public INamedTypeSymbol Target { get; set; }
     public string[] Fields { get; set; }
+
+    public static IEqualityComparer<PickTypeMapping> Comparer = new EqualityComparer();
+
+    private class EqualityComparer : IEqualityComparer<PickTypeMapping>
+    {
+        private static SymbolEqualityComparer symbolComparer = SymbolEqualityComparer.Default;
+
+        public bool Equals(PickTypeMapping x, PickTypeMapping y)
+        {
+            return  symbolComparer.Equals(x.Source, y.Source) &&
+                    symbolComparer.Equals(x.Target, y.Target) &&
+                    IsFieldsEquals(x.Fields, y.Fields);
+        }
+
+        public int GetHashCode(PickTypeMapping obj)
+        {
+            return  symbolComparer.GetHashCode(obj.Source) ^
+                    symbolComparer.GetHashCode(obj.Target) ^
+                    obj.Fields.GetHashCode();
+        }
+
+        private bool IsFieldsEquals(string[] x, string[] y)
+        {
+            return
+                (x == y) ||
+                (
+                    x.Length == y.Length &&
+                    Enumerable.Range(0, x.Length).All(i => x[i] == y[i])
+                );
+        }
+    }
 }
 
 [Generator]
 internal class PickSourceGenerator : IIncrementalGenerator
 {
     // TODO: move to separate non analyzer package
-    private string _attributeSrc = @"
-using System;
+    private string _attributeSrc =
+@"using System;
 
 namespace TypeUtilities;
 
@@ -28,7 +60,7 @@ public class PickAttribute : Attribute
     public Type SourceType { get; set; } 
     public string[] Fields { get; set; } = Array.Empty<string>();
 
-    public string Comment { get; set; }
+    public bool IncludeBaseClass { get; set; } = true;
 
     public PickAttribute(Type type, params string[] fields) : this(type)
     {
@@ -46,23 +78,23 @@ public class PickAttribute : Attribute
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-//#if DEBUG
-//        if (!Debugger.IsAttached)
-//        {
-//            Debugger.Launch();
-//        }
-//#endif
+#if DEBUG
+        if (!Debugger.IsAttached)
+        {
+            Debugger.Launch();
+        }
+#endif
 
         context.RegisterPostInitializationOutput(ctx => ctx.AddSource(
             "PickAttribute.g.cs",
-            SourceText.From(_attributeSrc, Encoding.UTF8)));
+            SourceText.From(_attributeSrc, Encoding.Unicode)));
 
         var typesDict = context.SyntaxProvider
             .CreateSyntaxProvider(
                 predicate: static (node, _) => node is TypeDeclarationSyntax,
                 transform: static (ctx, _) => (TypeDeclarationSyntax)ctx.Node)
             .Collect()
-            .Select((types, ct) => types.ToDictionary(x => x.Identifier.ToString())); // TODO: include namespace (use parent)
+            .Select((types, ct) => types.ToDictionary(x => x.GetFullTypeName(ct)));
 
         var attributes = context.SyntaxProvider
             .CreateSyntaxProvider(
@@ -89,55 +121,97 @@ public class PickAttribute : Attribute
                     if (targetTypeSymbolInfo is not INamedTypeSymbol targetTypeSymbol)
                         return null;
 
-                    // TODO: figure out how to recalculate on source type changes
-                    var attributeData = targetTypeSymbol.GetAttributes()[0]; // TODO: loop
-                    var sourceTypeSymbol = attributeData.ConstructorArguments[0].Value as INamedTypeSymbol; // return null if null :)
-                    var fields = attributeData.ConstructorArguments[1].Values.Select(x => x.Value as string).Where(x => x is not null).ToArray();
+                    var attributeData = targetTypeSymbol
+                        .GetAttributes()
+                        .FirstOrDefault(x =>
+                            x.AttributeClass is not null &&
+                            x.AttributeClass.Equals(attributeSymbol.ContainingType, SymbolEqualityComparer.Default));
 
-                    return new TypeMapping
+                    if (attributeData is null)
+                        return null;
+
+                    // TODO: move to a separate step?
+                    if (attributeData.ConstructorArguments.Length == 0)
+                        return null;
+
+                    var sourceTypeSymbol = attributeData.ConstructorArguments[0].Value as INamedTypeSymbol; // return null if null :)
+
+                    if (sourceTypeSymbol is null)
+                        return null;
+
+                    var fields = Array.Empty<string>();
+
+                    if (attributeData.ConstructorArguments.Length > 1)
+                    {
+                        fields = attributeData.ConstructorArguments[1].Values.Select(x => x.Value as string).Where(x => x is not null).ToArray()!;
+                    }
+
+                    return new PickTypeMapping
                     {
                         Target = targetTypeSymbol,
-                        Source = sourceTypeSymbol!,
-                        Fields = fields!
+                        Source = sourceTypeSymbol,
+                        Fields = fields
                     };
                 })
-            .Where(x => x is not null)
+            .SkipNulls()
+            .WithComparer(PickTypeMapping.Comparer)
             .Combine(typesDict);
 
         // Generate the source using the compilation and enums
         context.RegisterSourceOutput(attributes, static (context, tuple) => {
-            var mapping = tuple.Left;
-            var types = tuple.Right;
+            var mapping = tuple.Left!;
+            var types = tuple.Right!;
+
+            // TODO: support base class members
             var pickedMembers = mapping.Fields
                 .Select(f => mapping.Source.GetMembers(f).FirstOrDefault());
 
+            var targetTypeSyntax = types[mapping.Target.ToDisplayString()];
+
             var sourceBuilder = new StringBuilder();
 
-            var @namespace = mapping.Target.ContainingNamespace.ToDisplayString();
+            if (!mapping.Target.ContainingNamespace.IsGlobalNamespace)
+            {
+                var @namespace = mapping.Target.ContainingNamespace.ToDisplayString();
 
-            sourceBuilder.AppendLine($"namespace {@namespace};\n");
+                sourceBuilder.AppendLine($"namespace {@namespace};\n");
+            }
 
+            // TODO: proper conversion
             var accessability = mapping.Target.DeclaredAccessibility.ToString().ToLower();
             var targetName = mapping.Target.Name;
 
-            sourceBuilder.AppendLine($"{accessability} partial class {targetName}");
+            sourceBuilder.AppendLine($"{targetTypeSyntax.Modifiers} {targetTypeSyntax.Keyword} {targetName}");
             sourceBuilder.AppendLine("{");
 
             foreach (var member in pickedMembers)
             {
+                if (member is null)
+                    continue;
+
+                var accessibility = member.DeclaredAccessibility.ToString().ToLower();
+
                 if (member is IPropertySymbol prop)
                 {
-                    var propAccessibility = prop.DeclaredAccessibility.ToString().ToLower();
                     var propType = prop.Type.ToDisplayString();
                     var propName = prop.Name;
 
-                    sourceBuilder.AppendLine($"    {propAccessibility} {propType} {propName}" + " { get; set; }");
+                    sourceBuilder.AppendLine($"    {accessibility} {propType} {propName}" + " { get; set; }");
+                    continue;
+                }
+
+                if (member is IFieldSymbol field)
+                {
+                    var propType = field.Type.ToDisplayString();
+                    var propName = field.Name;
+
+                    sourceBuilder.AppendLine($"    {accessibility} {propType} {propName};");
                 }
             }
 
             sourceBuilder.AppendLine("}");
 
-            context.AddSource($"{targetName}.g.cs", SourceText.From(sourceBuilder.ToString(), Encoding.UTF8));
+            context.AddSource($"{targetName}.g.cs", SourceText.From(sourceBuilder.ToString(), Encoding.Unicode));
         });
     }
 }

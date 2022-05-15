@@ -24,12 +24,13 @@ public class SourceType : Base
     public Guid Id { get; set; }
     public int Value { get; set; }
     public DateTime Created { get; set; }
-    public CustomType SrcType { get; set; }
+
+    public CustomType SrcType => CustomType.Second;
 }
 
-[Pick(typeof(SourceType), "Id", Comment = "Comment")]
+[Pick(typeof(SourceType), "Id", nameof(SourceType.SrcType))]
 public partial class TargetType
 {
     public int MyProperty { get; set; }
-    public CustomType NonTrivail { get; set; }
+    public CustomType NonTrivial { get; set; }
 }
