@@ -29,7 +29,9 @@ internal class PickSourceGenerator : IIncrementalGenerator
                     var attributeSyntax = (AttributeSyntax)ctx.Node;
                     var attributeSymbolInfo = ctx.SemanticModel.GetSymbolInfo(attributeSyntax, ct);
 
-                    if (attributeSymbolInfo.Symbol is not IMethodSymbol attributeSymbol)
+                    var symbol = attributeSymbolInfo.Symbol ?? attributeSymbolInfo.CandidateSymbols.FirstOrDefault();
+
+                    if (symbol is not IMethodSymbol attributeSymbol)
                         return null;
 
                     var attributeFullName = attributeSymbol.ContainingType.ToDisplayString();
@@ -58,7 +60,7 @@ internal class PickSourceGenerator : IIncrementalGenerator
 
             // TODO: support base class members
             var pickedMembers = config.Fields
-                .Select(f => config.Source.GetMember(f, config.IncludeBaseTypes));
+                .Select(f => config.Source.GetMember(f, config.IncludeBaseTypes, context.CancellationToken));
 
             var targetTypeSyntax = types[config.Target.ToDisplayString()];
 

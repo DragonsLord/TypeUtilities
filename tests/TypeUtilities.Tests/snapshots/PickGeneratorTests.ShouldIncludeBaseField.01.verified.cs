@@ -1,0 +1,8 @@
+﻿//HintName: IncludeByDefault.g.cs
+namespace PickTests;
+
+public partial class IncludeByDefault
+{
+    public System.Guid Id { get; set; }
+    public double Score { get; set; }
+}
