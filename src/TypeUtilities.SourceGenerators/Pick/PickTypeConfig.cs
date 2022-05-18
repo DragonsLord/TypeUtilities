@@ -41,7 +41,19 @@ internal class PickTypeConfig
 
         if (attributeData.ConstructorArguments.Length > 1)
         {
-            fields = attributeData.ConstructorArguments[1].Values.Select(x => x.Value as string).Where(x => x is not null).ToArray()!;
+            if (attributeData.ConstructorArguments[1].Type?.TypeKind == TypeKind.Array)
+            {
+                fields = attributeData.ConstructorArguments[1].Values.Select(x => x.Value as string).Where(x => x is not null).ToArray()!;
+            }
+            else
+            {
+                fields = attributeData.ConstructorArguments
+                            .Skip(1)
+                            .Where(arg => !arg.IsNull && arg.Type?.TypeKind == TypeKind.Class)
+                            .Select(arg => arg.Value as string)
+                            .Where(arg => arg is not null)
+                            .ToArray()!;
+            }
         }
 
         var namedArgs = attributeData.NamedArguments.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);

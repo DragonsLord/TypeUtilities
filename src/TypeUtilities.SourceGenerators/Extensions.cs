@@ -78,7 +78,7 @@ internal static class Extensions
         return defaultValue;
     }
 
-    public static ISymbol? GetMember(this ITypeSymbol typeSymbol, string name, bool includeBase)
+    public static ISymbol? GetMember(this ITypeSymbol typeSymbol, string name, bool includeBase, CancellationToken token)
     {
         var directMember = typeSymbol.GetMembers(name).FirstOrDefault();
 
@@ -88,9 +88,13 @@ internal static class Extensions
         var currSymbol = typeSymbol.BaseType;
         while (currSymbol is not null)
         {
+            token.ThrowIfCancellationRequested();
+
             var member = currSymbol.GetMembers(name).FirstOrDefault();
             if (member is not null)
                 return member;
+
+            currSymbol = currSymbol.BaseType;
         }
 
         return null;
