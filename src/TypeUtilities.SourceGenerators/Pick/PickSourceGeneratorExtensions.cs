@@ -8,19 +8,12 @@ using TypeUtilities.SourceGenerators.Pick;
 namespace TypeUtilities.Pick;
 
 [Generator]
-internal class PickSourceGenerator : IIncrementalGenerator
+internal static class PickSourceGeneratorExtensions
 {
     private static Regex attributeNameRegex = new Regex("^(TypeUtilities)?Pick(Attribute)?$");
 
-    public void Initialize(IncrementalGeneratorInitializationContext context)
+    public static void CreatePickUtility(this IncrementalGeneratorInitializationContext context, IncrementalValueProvider<Dictionary<string, TypeDeclarationSyntax>> types)
     {
-        var typesDict = context.SyntaxProvider
-            .CreateSyntaxProvider(
-                predicate: static (node, _) => node is TypeDeclarationSyntax,
-                transform: static (ctx, _) => (TypeDeclarationSyntax)ctx.Node)
-            .Collect()
-            .Select((types, ct) => types.ToDictionary(x => x.GetFullName(ct)));
-
         var attributes = context.SyntaxProvider
             .CreateSyntaxProvider(
                 predicate: static (node, _) => node is AttributeSyntax attr && attributeNameRegex.IsMatch(attr.Name.ToString()),
@@ -60,7 +53,7 @@ internal class PickSourceGenerator : IIncrementalGenerator
                 })
             .SkipNulls()
             .WithComparer(PickTypeConfig.Comparer)
-            .Combine(typesDict);
+            .Combine(types);
 
         // Generate the source using the compilation and enums
         context.RegisterSourceOutput(attributes, static (context, tuple) => {
@@ -122,7 +115,6 @@ internal class PickSourceGenerator : IIncrementalGenerator
                 context.AddSource($"{targetName}.g.cs", SourceText.From(sourceBuilder.ToString(), Encoding.Unicode));
             }
             catch { /* TODO: diagnostics? */ }
-
         });
     }
 }
