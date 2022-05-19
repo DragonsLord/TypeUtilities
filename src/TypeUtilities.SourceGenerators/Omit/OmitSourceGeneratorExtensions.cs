@@ -8,11 +8,11 @@ using TypeUtilities.SourceGenerators.Pick;
 namespace TypeUtilities.Pick;
 
 [Generator]
-internal static class PickSourceGeneratorExtensions
+internal static class OmitSourceGeneratorExtensions
 {
-    private static Regex attributeNameRegex = new Regex("^(TypeUtilities)?Pick(Attribute)?$");
+    private static Regex attributeNameRegex = new Regex("^(TypeUtilities)?Omit(Attribute)?$");
 
-    public static IncrementalGeneratorInitializationContext CreatePickUtility(
+    public static IncrementalGeneratorInitializationContext CreateOmitUtility(
         this IncrementalGeneratorInitializationContext context,
         IncrementalValueProvider<Dictionary<string, TypeDeclarationSyntax>> types)
     {
@@ -33,7 +33,7 @@ internal static class PickSourceGeneratorExtensions
 
                         var attributeFullName = attributeSymbol.ContainingType.ToDisplayString();
 
-                        if (attributeFullName != "TypeUtilities.PickAttribute")
+                        if (attributeFullName != "TypeUtilities.OmitAttribute")
                             return null;
 
                         if (!attributeSyntax.TryFindParent<TypeDeclarationSyntax>(out var targetTypeSyntax, ct))
@@ -44,7 +44,7 @@ internal static class PickSourceGeneratorExtensions
                         if (targetTypeSymbolInfo is not INamedTypeSymbol targetTypeSymbol)
                             return null;
 
-                        return PickTypeConfig.Create(attributeSymbol.ContainingType, targetTypeSymbol);
+                        return OmitTypeConfig.Create(attributeSymbol.ContainingType, targetTypeSymbol);
                     }
                     catch
                     {
@@ -54,20 +54,23 @@ internal static class PickSourceGeneratorExtensions
 
                 })
             .SkipNulls()
-            .WithComparer(PickTypeConfig.Comparer)
+            .WithComparer(OmitTypeConfig.Comparer)
             .Combine(types);
 
         // Generate the source using the compilation and enums
         context.RegisterSourceOutput(attributes, static (context, tuple) => {
             try
             {
-                //TODO: add global try catch with diagnostics
                 var config = tuple.Left!;
                 var types = tuple.Right!;
 
-                // TODO: support base class members
-                var pickedMembers = config.Fields
-                    .Select(f => config.Source.GetMember(f, config.IncludeBaseTypes, context.CancellationToken));
+                // TODO: add include base type support
+                // TODO: also introduce fine grained control over memners to pick
+                var pickedMembers = config.Source
+                    .GetMembers()
+                    .Where(m => !m.IsImplicitlyDeclared)
+                    .Where(m => m is IPropertySymbol || m is IFieldSymbol)
+                    .Where(m => !config.Fields.Contains(m.Name));
 
                 var targetTypeSyntax = types[config.Target.ToDisplayString()];
 
@@ -114,7 +117,7 @@ internal static class PickSourceGeneratorExtensions
 
                 sourceBuilder.AppendLine("}");
 
-                context.AddSource($"{targetName}.g.cs", SourceText.From(sourceBuilder.ToString(), Encoding.Unicode));
+                context.AddSource($"{targetName}.omit.g.cs", SourceText.From(sourceBuilder.ToString(), Encoding.Unicode));
             }
             catch { /* TODO: diagnostics? */ }
         });

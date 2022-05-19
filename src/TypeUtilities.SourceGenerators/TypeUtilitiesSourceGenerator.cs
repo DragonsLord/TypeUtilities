@@ -15,7 +15,9 @@ namespace TypeUtilities.SourceGenerators
                 .Collect()
                 .Select((types, ct) => types.ToDictionary(x => x.GetFullName(ct)));
 
-            context.CreatePickUtility(typesDict);
+            context
+                .CreatePickUtility(typesDict)
+                .CreateOmitUtility(typesDict);
         }
     }
 }
