@@ -33,8 +33,9 @@ public partial class TargetType
     public double AdditionalValue { get; set; }
 }
 
-[Omit(typeof(SourceType), "Id")]
+[Pick(typeof(Base), nameof(Base.BaseType))]
+[Omit(typeof(SourceType), "Value", "Value")]
 public partial class OmittedType
 {
-
+    public int MyProperty { get; set; }
 }

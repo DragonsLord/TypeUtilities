@@ -3,11 +3,9 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using System.Text;
 using System.Text.RegularExpressions;
-using TypeUtilities.SourceGenerators.Pick;
 
-namespace TypeUtilities.Pick;
+namespace TypeUtilities.SourceGenerators.Pick;
 
-[Generator]
 internal static class PickSourceGeneratorExtensions
 {
     private static Regex attributeNameRegex = new Regex("^(TypeUtilities)?Pick(Attribute)?$");
@@ -58,7 +56,8 @@ internal static class PickSourceGeneratorExtensions
             .Combine(types);
 
         // Generate the source using the compilation and enums
-        context.RegisterSourceOutput(attributes, static (context, tuple) => {
+        context.RegisterSourceOutput(attributes, static (context, tuple) =>
+        {
             try
             {
                 //TODO: add global try catch with diagnostics
@@ -114,6 +113,7 @@ internal static class PickSourceGeneratorExtensions
 
                 sourceBuilder.AppendLine("}");
 
+                // TODO: add pick suffix to filename
                 context.AddSource($"{targetName}.g.cs", SourceText.From(sourceBuilder.ToString(), Encoding.Unicode));
             }
             catch { /* TODO: diagnostics? */ }

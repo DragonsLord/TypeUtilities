@@ -3,11 +3,9 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using System.Text;
 using System.Text.RegularExpressions;
-using TypeUtilities.SourceGenerators.Pick;
 
-namespace TypeUtilities.Pick;
+namespace TypeUtilities.SourceGenerators.Omit;
 
-[Generator]
 internal static class OmitSourceGeneratorExtensions
 {
     private static Regex attributeNameRegex = new Regex("^(TypeUtilities)?Omit(Attribute)?$");

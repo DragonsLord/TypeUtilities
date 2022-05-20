@@ -1,6 +1,6 @@
 ﻿using Microsoft.CodeAnalysis;
 
-namespace TypeUtilities.SourceGenerators.Pick;
+namespace TypeUtilities.SourceGenerators.Omit;
 
 internal class OmitTypeConfig
 {

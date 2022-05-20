@@ -1,9 +1,11 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using TypeUtilities.Pick;
+using TypeUtilities.SourceGenerators.Omit;
+using TypeUtilities.SourceGenerators.Pick;
 
 namespace TypeUtilities.SourceGenerators
 {
+    [Generator]
     internal class TypeUtilitiesSourceGenerator : IIncrementalGenerator
     {
         public void Initialize(IncrementalGeneratorInitializationContext context)
