@@ -1,5 +1,6 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using TypeUtilities.SourceGenerators.Helpers;
 using TypeUtilities.SourceGenerators.Omit;
 using TypeUtilities.SourceGenerators.Pick;
 

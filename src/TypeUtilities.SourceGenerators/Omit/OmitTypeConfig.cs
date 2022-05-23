@@ -1,4 +1,5 @@
 ﻿using Microsoft.CodeAnalysis;
+using TypeUtilities.SourceGenerators.Helpers;
 
 namespace TypeUtilities.SourceGenerators.Omit;
 
@@ -17,18 +18,14 @@ internal class OmitTypeConfig
         IncludeBaseTypes = includeBaseTypes;
     }
 
-    public static OmitTypeConfig? Create(INamedTypeSymbol attributeSymbol, INamedTypeSymbol targetTypeSymbol)
+    public static OmitTypeConfig? Create(INamedTypeSymbol targetTypeSymbol)
     {
-         var attributeData = targetTypeSymbol
-            .GetAttributes()
-            .FirstOrDefault(x =>
-                x.AttributeClass is not null &&
-                x.AttributeClass.Equals(attributeSymbol, SymbolEqualityComparer.Default));
+        // TODO: reference actual attribute?
+        var attributeData = targetTypeSymbol.GetAttributeData("TypeUtilities.OmitAttribute");
 
         if (attributeData is null)
             return null;
 
-        // TODO: move to a separate step?
         if (attributeData.ConstructorArguments.Length == 0)
             return null;
 
@@ -37,24 +34,7 @@ internal class OmitTypeConfig
         if (sourceTypeSymbol is null)
             return null;
 
-        var fields = Array.Empty<string>();
-
-        if (attributeData.ConstructorArguments.Length > 1)
-        {
-            if (attributeData.ConstructorArguments[1].Type?.TypeKind == TypeKind.Array)
-            {
-                fields = attributeData.ConstructorArguments[1].Values.Select(x => x.Value as string).Where(x => x is not null).ToArray()!;
-            }
-            else
-            {
-                fields = attributeData.ConstructorArguments
-                            .Skip(1)
-                            .Where(arg => !arg.IsNull && arg.Type?.TypeKind == TypeKind.Class)
-                            .Select(arg => arg.Value as string)
-                            .Where(arg => arg is not null)
-                            .ToArray()!;
-            }
-        }
+        var fields = attributeData.ConstructorArguments.GetParamsArrayAt<string>(1);
 
         var namedArgs = attributeData.NamedArguments.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
 
@@ -63,39 +43,4 @@ internal class OmitTypeConfig
 
         return new OmitTypeConfig(sourceTypeSymbol, targetTypeSymbol, fields, includeBaseTypes);
     }
-
-    #region Comparer
-    public static IEqualityComparer<OmitTypeConfig> Comparer = new EqualityComparer();
-
-    private class EqualityComparer : IEqualityComparer<OmitTypeConfig>
-    {
-        private static SymbolEqualityComparer symbolComparer = SymbolEqualityComparer.Default;
-
-        public bool Equals(OmitTypeConfig x, OmitTypeConfig y)
-        {
-            return  symbolComparer.Equals(x.Source, y.Source) &&
-                    symbolComparer.Equals(x.Target, y.Target) &&
-                    x.IncludeBaseTypes == y.IncludeBaseTypes  &&
-                    IsFieldsEquals(x.Fields, y.Fields);
-        }
-
-        public int GetHashCode(OmitTypeConfig obj)
-        {
-            return  symbolComparer.GetHashCode(obj.Source) ^
-                    symbolComparer.GetHashCode(obj.Target) ^
-                    obj.IncludeBaseTypes.GetHashCode()     ^
-                    obj.Fields.GetHashCode();
-        }
-
-        private bool IsFieldsEquals(string[] x, string[] y)
-        {
-            return
-                (x == y) ||
-                (
-                    x.Length == y.Length &&
-                    Enumerable.Range(0, x.Length).All(i => x[i] == y[i])
-                );
-        }
-    }
-    #endregion
 }
