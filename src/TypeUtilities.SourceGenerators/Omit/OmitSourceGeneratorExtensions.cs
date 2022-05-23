@@ -37,8 +37,7 @@ internal static class OmitSourceGeneratorExtensions
                 // TODO: add include base type support
                 // TODO: also introduce fine grained control over memners to pick
                 var pickedMembers = config.Source
-                    .GetMembers()
-                    .Where(m => !m.IsImplicitlyDeclared)
+                    .GetExplicitMembers(config.IncludeBaseTypes)
                     .Where(m => m is IPropertySymbol || m is IFieldSymbol)
                     .Where(m => !config.Fields.Contains(m.Name));
 
