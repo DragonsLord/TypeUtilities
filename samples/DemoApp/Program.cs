@@ -7,8 +7,8 @@ public static class Program
 {
     public static void Main(string[] args)
     {
-        var val = new TargetType();
-        var props = typeof(TargetType).GetProperties().Select(p => $"{p.PropertyType.Name} {p.Name}").ToArray();
+        var val = new OmittedType();
+        var props = typeof(OmittedType).GetProperties().Select(p => $"{p.PropertyType.Name} {p.Name}").ToArray();
         Console.WriteLine(string.Join(", ", props));
     }
 }
@@ -31,4 +31,10 @@ public class SourceType : Base
 public partial class TargetType
 {
     public double AdditionalValue { get; set; }
+}
+
+[Omit(typeof(SourceType), "Value", IncludeBaseTypes = false)]
+public partial class OmittedType
+{
+    public int MyProperty { get; set; }
 }

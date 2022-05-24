@@ -2,17 +2,16 @@
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using TypeUtilities.SourceGenerators.Helpers;
 
-namespace TypeUtilities.SourceGenerators.Pick;
+namespace TypeUtilities.SourceGenerators.Omit;
 
-internal static class PickSourceGeneratorExtensions
+internal static class OmitSourceGeneratorExtensions
 {
-
-    public static IncrementalGeneratorInitializationContext CreatePickUtility(
+    public static IncrementalGeneratorInitializationContext CreateOmitUtility(
         this IncrementalGeneratorInitializationContext context,
         IncrementalValueProvider<Dictionary<string, TypeDeclarationSyntax>> types)
     {
         var attributes = context.SyntaxProvider
-            .CreateAttributeSyntaxProvider("Pick")
+            .CreateAttributeSyntaxProvider("Omit")
             .Combine(types)
             .Combine(context.CompilationProvider);
 
@@ -31,18 +30,21 @@ internal static class PickSourceGeneratorExtensions
                 if (!targetTypeSyntax.TryCompileNamedTypeSymbol(compilation, token, out var targetTypeSymbol))
                     return;
 
-                var config = PickTypeConfig.Create(targetTypeSymbol);
+                var config = OmitTypeConfig.Create(targetTypeSymbol);
                 if (config is null)
                     return;
 
-                var pickedMembers = config.Fields
-                    .Select(f => config.Source.GetMember(f, config.IncludeBaseTypes, context.CancellationToken));
+                // TODO: also introduce fine grained control over memners to pick
+                var pickedMembers = config.Source
+                    .GetExplicitMembers(config.IncludeBaseTypes)
+                    .Where(m => m is IPropertySymbol || m is IFieldSymbol)
+                    .Where(m => !config.Fields.Contains(m.Name));
 
                 context.WriteType(
-                               @namespace: config.Target.ContainingNamespace,
-                    typeDeclarationSyntax: targetTypeSyntax,
-                                  members: pickedMembers,
-                           outputFileName: $"{config.Target.Name}.g.cs"); // TODO: rename simillar to omit
+                               @namespace:  config.Target.ContainingNamespace,
+                    typeDeclarationSyntax:  targetTypeSyntax,
+                                  members:  pickedMembers,
+                           outputFileName:  $"{config.Target.Name}.omit.{config.Source.Name}.g.cs");
             }
             catch { /* TODO: diagnostics? */ }
         });

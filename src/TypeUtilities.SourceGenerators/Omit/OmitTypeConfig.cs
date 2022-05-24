@@ -1,16 +1,16 @@
 ﻿using Microsoft.CodeAnalysis;
 using TypeUtilities.SourceGenerators.Helpers;
 
-namespace TypeUtilities.SourceGenerators.Pick;
+namespace TypeUtilities.SourceGenerators.Omit;
 
-internal class PickTypeConfig
+internal class OmitTypeConfig
 {
     public INamedTypeSymbol Source { get; }
     public INamedTypeSymbol Target { get; }
     public string[] Fields { get; }
     public bool IncludeBaseTypes { get; set; }
 
-    private PickTypeConfig(INamedTypeSymbol source, INamedTypeSymbol target, string[] fields, bool includeBaseTypes)
+    private OmitTypeConfig(INamedTypeSymbol source, INamedTypeSymbol target, string[] fields, bool includeBaseTypes)
     {
         Source = source;
         Target = target;
@@ -18,15 +18,14 @@ internal class PickTypeConfig
         IncludeBaseTypes = includeBaseTypes;
     }
 
-    public static PickTypeConfig? Create(INamedTypeSymbol targetTypeSymbol)
+    public static OmitTypeConfig? Create(INamedTypeSymbol targetTypeSymbol)
     {
         // TODO: reference actual attribute?
-        var attributeData = targetTypeSymbol.GetAttributeData("TypeUtilities.PickAttribute");
+        var attributeData = targetTypeSymbol.GetAttributeData("TypeUtilities.OmitAttribute");
 
         if (attributeData is null)
             return null;
 
-        // TODO: move to a separate step?
         if (attributeData.ConstructorArguments.Length == 0)
             return null;
 
@@ -42,6 +41,6 @@ internal class PickTypeConfig
         var includeBaseTypes = namedArgs.GetParamValue("IncludeBaseTypes", true);
         fields = namedArgs.GetParamValues("Fields", fields);
 
-        return new PickTypeConfig(sourceTypeSymbol, targetTypeSymbol, fields, includeBaseTypes);
+        return new OmitTypeConfig(sourceTypeSymbol, targetTypeSymbol, fields, includeBaseTypes);
     }
 }
