@@ -34,7 +34,6 @@ internal static class OmitSourceGeneratorExtensions
                 if (config is null)
                     return;
 
-                // TODO: add include base type support
                 // TODO: also introduce fine grained control over memners to pick
                 var pickedMembers = config.Source
                     .GetExplicitMembers(config.IncludeBaseTypes)
