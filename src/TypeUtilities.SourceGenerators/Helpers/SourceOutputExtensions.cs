@@ -51,7 +51,9 @@ namespace TypeUtilities.SourceGenerators.Helpers
 
             sourceBuilder.AppendLine("}");
 
-            context.AddSource(outputFileName, SourceText.From(sourceBuilder.ToString(), Encoding.Unicode));
+            var source = sourceBuilder.ToString().Replace("\r\n", "\n").Replace("\n", Environment.NewLine);
+
+            context.AddSource(outputFileName, SourceText.From(source, Encoding.Unicode));
         }
     }
 }

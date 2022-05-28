@@ -1,12 +1,21 @@
 ﻿using System.Threading.Tasks;
+using TypeUtilities.Tests.Fixture;
 using VerifyXunit;
 using Xunit;
 
 namespace TypeUtilities.Tests;
 
 [UsesVerify]
+[Collection("Compilation Collection")]
 public class PickGeneratorTests
 {
+    private readonly CompilationFixture _fixture;
+
+    public PickGeneratorTests(CompilationFixture compilationFixture)
+    {
+        _fixture = compilationFixture;
+    }
+
     [Fact]
     public Task ShouldAddSpecifiedField()
     {
@@ -31,7 +40,7 @@ public partial class TargetType
 }
 ";
 
-        return TestHelper.Verify(source);
+        return Verify(source);
     }
 
     [Fact] //TODO: Theory
@@ -66,7 +75,7 @@ public partial class DoNotInclude {}
 public partial class IncludeExplicitly {}
 ";
 
-        return TestHelper.Verify(source);
+        return Verify(source);
     }
 
 
@@ -92,7 +101,7 @@ public partial class TargetType
 }
 ";
 
-        return TestHelper.Verify(source);
+        return Verify(source);
     }
 
     [Fact]
@@ -122,7 +131,7 @@ public partial class TargetType2
 }
 ";
 
-        return TestHelper.Verify(source);
+        return Verify(source);
     }
 
     [Fact] //TODO: Theory
@@ -154,7 +163,12 @@ public partial class ValueError {}
 public partial class NameError {}
 ";
 
-        return TestHelper.Verify(source);
+        return Verify(source);
     }
     #endregion
+
+    private Task Verify(string source)
+    {
+        return _fixture.Verify(source, "pick");
+    }
 }

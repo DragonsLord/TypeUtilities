@@ -42,7 +42,7 @@ internal static class PickSourceGeneratorExtensions
                                @namespace: config.Target.ContainingNamespace,
                     typeDeclarationSyntax: targetTypeSyntax,
                                   members: pickedMembers,
-                           outputFileName: $"{config.Target.Name}.g.cs"); // TODO: rename simillar to omit
+                           outputFileName: $"{config.Target.Name}.pick.{config.Source.Name}.g.cs");
             }
             catch { /* TODO: diagnostics? */ }
         });

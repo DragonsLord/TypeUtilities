@@ -1,7 +1,7 @@
 ﻿using System.Runtime.CompilerServices;
 using VerifyTests;
 
-namespace TypeUtilities.Tests;
+namespace TypeUtilities.Tests.Fixture;
 
 public static class Initialization
 {

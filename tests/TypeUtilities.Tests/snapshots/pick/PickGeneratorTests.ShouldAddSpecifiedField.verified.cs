@@ -1,4 +1,4 @@
-﻿//HintName: TargetType.g.cs
+﻿//HintName: TargetType.pick.SourceType.g.cs
 namespace PickTests;
 
 public partial class TargetType

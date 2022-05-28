@@ -1,4 +1,4 @@
-﻿//HintName: DoNotInclude.g.cs
+﻿//HintName: DoNotInclude.pick.SourceType.g.cs
 namespace PickTests;
 
 public partial class DoNotInclude
