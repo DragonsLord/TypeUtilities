@@ -26,7 +26,7 @@ jobs:
         run: dotnet test --no-build --verbosity normal
       - name: Pack
         run: dotnet pack src/TypeUtilities/TypeUtilities.csproj --no-build -o lib
-      - name: Test Pacakge Usage
+      - name: Test Package Usage
         run: |
           dotnet remove samples/DemoApp/DemoApp.csproj reference src/TypeUtilities.Abstractions/TypeUtilities.Abstractions.csproj
           dotnet remove samples/DemoApp/DemoApp.csproj reference src/TypeUtilities.SourceGenerators/TypeUtilities.SourceGenerators.csproj
