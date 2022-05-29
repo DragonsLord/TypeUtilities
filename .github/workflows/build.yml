@@ -26,8 +26,8 @@ jobs:
         run: dotnet test --no-build --verbosity normal
       - name: Pack
         run: dotnet pack src/TypeUtilities/TypeUtilities.csproj --no-build -o lib
-      - name: Upload a Build Artifact
-        uses: actions/upload-artifact@v3.1.0
-        with:
-          name: lib
-          path: lib
+      - name: Test Pacakge Usage
+        run: |
+          dotnet remove samples/DemoApp/DemoApp.csproj reference **/*.csproj
+          dotnet add samples/DemoApp/DemoApp.csproj package TypeUtilities --prerelease
+          dotnet build samples/DemoApp/DemoApp.csproj -c Release
