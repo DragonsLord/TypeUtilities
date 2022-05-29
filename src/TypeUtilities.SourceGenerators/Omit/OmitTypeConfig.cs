@@ -20,8 +20,7 @@ internal class OmitTypeConfig
 
     public static OmitTypeConfig? Create(INamedTypeSymbol targetTypeSymbol)
     {
-        // TODO: reference actual attribute?
-        var attributeData = targetTypeSymbol.GetAttributeData("TypeUtilities.OmitAttribute");
+        var attributeData = targetTypeSymbol.GetAttributeData<OmitAttribute>();
 
         if (attributeData is null)
             return null;

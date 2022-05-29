@@ -6,9 +6,12 @@ namespace TypeUtilities.SourceGenerators.Helpers
 {
     internal static class IncrementalValuesProviderExtensions
     {
-        public static IncrementalValuesProvider<AttributeSyntax> CreateAttributeSyntaxProvider(this SyntaxValueProvider syntaxProvider, string attributeName)
+        public static IncrementalValuesProvider<AttributeSyntax> CreateAttributeSyntaxProvider<T>(this SyntaxValueProvider syntaxProvider)
+            where T : Attribute
         {
-            var attributeNameRegex = new Regex($"^(TypeUtilities)?{attributeName}(Attribute)?$");
+            var attributeType = typeof(T);
+            var attributeNameRegex = new Regex($"^({attributeType.Namespace})?{attributeType.GetShortAttributeName()}(Attribute)?$");
+
             return syntaxProvider.CreateSyntaxProvider(
                 predicate: (node, _) => node is AttributeSyntax attr && attributeNameRegex.IsMatch(attr.Name.ToString()),
                 transform: (ctx, ct) =>
@@ -25,7 +28,7 @@ namespace TypeUtilities.SourceGenerators.Helpers
 
                         var attributeFullName = attributeSymbol.ContainingType.ToDisplayString();
 
-                        if (attributeFullName != $"TypeUtilities.{attributeName}Attribute")
+                        if (attributeFullName != attributeType.FullName)
                             return null;
 
                         return attributeSyntax;

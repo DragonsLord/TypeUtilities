@@ -9,11 +9,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{CE30
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DemoApp", "samples\DemoApp\DemoApp.csproj", "{61CA254A-75F3-46BA-9F33-C485A321296E}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TypeUtilities", "src\TypeUtilities\TypeUtilities.csproj", "{8C0BD537-8220-4DBA-9766-2371270D7397}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TypeUtilities.Abstractions", "src\TypeUtilities.Abstractions\TypeUtilities.Abstractions.csproj", "{8C0BD537-8220-4DBA-9766-2371270D7397}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{E0193E22-2D53-4E3A-8B51-A6A28D19C86C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TypeUtilities.Tests", "tests\TypeUtilities.Tests\TypeUtilities.Tests.csproj", "{B111C3D8-D239-4DE1-8047-3E18725144FB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TypeUtilities.Tests", "tests\TypeUtilities.Tests\TypeUtilities.Tests.csproj", "{B111C3D8-D239-4DE1-8047-3E18725144FB}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TypeUtilities", "src\TypeUtilities\TypeUtilities.csproj", "{588C72B4-299E-4CF8-BC29-6C88AB6599F2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -37,6 +39,10 @@ Global
 		{B111C3D8-D239-4DE1-8047-3E18725144FB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B111C3D8-D239-4DE1-8047-3E18725144FB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B111C3D8-D239-4DE1-8047-3E18725144FB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{588C72B4-299E-4CF8-BC29-6C88AB6599F2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{588C72B4-299E-4CF8-BC29-6C88AB6599F2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{588C72B4-299E-4CF8-BC29-6C88AB6599F2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{588C72B4-299E-4CF8-BC29-6C88AB6599F2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

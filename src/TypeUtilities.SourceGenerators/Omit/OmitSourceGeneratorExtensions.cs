@@ -11,7 +11,7 @@ internal static class OmitSourceGeneratorExtensions
         IncrementalValueProvider<Dictionary<string, TypeDeclarationSyntax>> types)
     {
         var attributes = context.SyntaxProvider
-            .CreateAttributeSyntaxProvider("Omit")
+            .CreateAttributeSyntaxProvider<OmitAttribute>()
             .Combine(types)
             .Combine(context.CompilationProvider);
 

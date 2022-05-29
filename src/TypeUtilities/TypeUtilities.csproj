@@ -1,14 +1,26 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
-	<ImplicitUsings>enable</ImplicitUsings>
-	<Nullable>enable</Nullable>
-	<LangVersion>Latest</LangVersion>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>netstandard2.0</TargetFramework>
+		<IncludeBuildOutput>false</IncludeBuildOutput>
+		<PackageId>TypeUtilities</PackageId>
+		<Description>A set of type utilities for operation on types like Pick or Omit</Description>
+	</PropertyGroup>
 
-  <!-- <ItemGroup>
-	  <ProjectReference Include="..\..\src\TypeUtilities.SourceGenerators\TypeUtilities.SourceGenerators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
-  </ItemGroup> -->
+	<!-- Reference the attributes from the generator to compile against them -->
+	<!-- Ensure we specify PrivateAssets so the NuGet doesn't have any dependencies -->
+	<ItemGroup>
+		<ProjectReference Include="..\TypeUtilities.Abstractions\TypeUtilities.Abstractions.csproj" PrivateAssets="all" />
+		<ProjectReference Include="..\TypeUtilities.SourceGenerators\TypeUtilities.SourceGenerators.csproj" PrivateAssets="all"/>
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- source generators assemblies -->
+		<None Include="$(OutputPath)/TypeUtilities.SourceGenerators.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+		<None Include="$(OutputPath)/TypeUtilities.Abstractions.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+
+		<!-- runtime assemblies -->
+		<None Include="$(OutputPath)/TypeUtilities.Abstractions.dll" Pack="true" PackagePath="lib/netstandard2.0" Visible="true" />
+	</ItemGroup>
 
 </Project>

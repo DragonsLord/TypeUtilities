@@ -8,11 +8,9 @@
 	</PropertyGroup>
 
     <ItemGroup>
-		<ProjectReference
-			Include="..\..\src\TypeUtilities.SourceGenerators\TypeUtilities.SourceGenerators.csproj"
-			OutputItemType="Analyzer"
-			ReferenceOutputAssembly="false" />
-		<ProjectReference Include="..\..\src\TypeUtilities\TypeUtilities.csproj" />
+		<ProjectReference Include="..\..\src\TypeUtilities.SourceGenerators\TypeUtilities.SourceGenerators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+		<ProjectReference Include="..\..\src\TypeUtilities.Abstractions\TypeUtilities.Abstractions.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+		<ProjectReference Include="..\..\src\TypeUtilities.Abstractions\TypeUtilities.Abstractions.csproj" />
     </ItemGroup>
 
 </Project>

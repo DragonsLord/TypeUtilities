@@ -29,7 +29,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\TypeUtilities.SourceGenerators\TypeUtilities.SourceGenerators.csproj" />
-    <ProjectReference Include="..\..\src\TypeUtilities\TypeUtilities.csproj" />
+    <ProjectReference Include="..\..\src\TypeUtilities.Abstractions\TypeUtilities.Abstractions.csproj" />
   </ItemGroup>
 
 </Project>

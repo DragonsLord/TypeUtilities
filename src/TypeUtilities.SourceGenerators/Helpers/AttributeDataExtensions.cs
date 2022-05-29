@@ -4,8 +4,13 @@ namespace TypeUtilities.SourceGenerators.Helpers
 {
     internal static class AttributeDataExtensions
     {
+        public static string GetShortAttributeName(this Type type)
+        {
+            return type.Name.Substring(0, type.Name.Length - 9).ToString();
+        }
+
         public static AttributeData? GetAttributeData<T>(this INamedTypeSymbol typeSymbol)
-            => GetAttributeData(typeSymbol, typeof(T).Name!);
+            => GetAttributeData(typeSymbol, typeof(T).FullName!);
 
         public static AttributeData? GetAttributeData(this INamedTypeSymbol typeSymbol, string attributeName)
         {

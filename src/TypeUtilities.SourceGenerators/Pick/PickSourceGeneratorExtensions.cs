@@ -12,7 +12,7 @@ internal static class PickSourceGeneratorExtensions
         IncrementalValueProvider<Dictionary<string, TypeDeclarationSyntax>> types)
     {
         var attributes = context.SyntaxProvider
-            .CreateAttributeSyntaxProvider("Pick")
+            .CreateAttributeSyntaxProvider<PickAttribute>()
             .Combine(types)
             .Combine(context.CompilationProvider);
 

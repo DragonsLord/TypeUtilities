@@ -20,8 +20,7 @@ internal class PickTypeConfig
 
     public static PickTypeConfig? Create(INamedTypeSymbol targetTypeSymbol)
     {
-        // TODO: reference actual attribute?
-        var attributeData = targetTypeSymbol.GetAttributeData("TypeUtilities.PickAttribute");
+        var attributeData = targetTypeSymbol.GetAttributeData<PickAttribute>();
 
         if (attributeData is null)
             return null;
