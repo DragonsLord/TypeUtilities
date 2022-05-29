@@ -1,0 +1,23 @@
+name: Publish
+
+on:
+  push:
+    tags:
+      - v*
+
+jobs:
+  pubish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v2
+        with:
+          dotnet-version: 6.0.x
+      - name: Pack
+        run: dotnet pack src/TypeUtilities/TypeUtilities.csproj -o lib
+      - name: Publish
+        run: dotnet nuget push lib/$(ls lib) -k $API_KEY -s https://api.nuget.org/v3/index.json
+        env:
+          API_KEY: ${{ secrets.NUGET_API_KEY }}
