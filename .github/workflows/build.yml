@@ -28,6 +28,7 @@ jobs:
         run: dotnet pack src/TypeUtilities/TypeUtilities.csproj --no-build -o lib
       - name: Test Pacakge Usage
         run: |
-          dotnet remove samples/DemoApp/DemoApp.csproj reference **/*.csproj
+          dotnet remove samples/DemoApp/DemoApp.csproj reference src/TypeUtilities.Abstractions/TypeUtilities.Abstractions.csproj
+          dotnet remove samples/DemoApp/DemoApp.csproj reference src/TypeUtilities.SourceGenerators/TypeUtilities.SourceGenerators.csproj
           dotnet add samples/DemoApp/DemoApp.csproj package TypeUtilities --prerelease
           dotnet build samples/DemoApp/DemoApp.csproj -c Release
