@@ -4,14 +4,23 @@
 		<TargetFramework>netstandard2.0</TargetFramework>
 		<IncludeBuildOutput>false</IncludeBuildOutput>
 		<PackageId>TypeUtilities</PackageId>
-		<Description>A set of type utilities for operation on types like Pick or Omit</Description>
+		<Version>0.0.1-alpha1</Version>
+		<Authors>Yevhenii Serdiuk</Authors>
+		<PackageProjectUrl>https://github.com/DragonsLord/TypeUtilities</PackageProjectUrl>
+		<PackageTags>Type Utilities;Type Mapping;Pick;Omit;Source Generators;Generator;Generation;Codegen</PackageTags>
+		<Description>
+			A set of type utilities to transform types.
+			Include utils like:
+				- Pick
+				- Omit
+		</Description>
 	</PropertyGroup>
 
 	<!-- Reference the attributes from the generator to compile against them -->
 	<!-- Ensure we specify PrivateAssets so the NuGet doesn't have any dependencies -->
 	<ItemGroup>
 		<ProjectReference Include="..\TypeUtilities.Abstractions\TypeUtilities.Abstractions.csproj" PrivateAssets="all" />
-		<ProjectReference Include="..\TypeUtilities.SourceGenerators\TypeUtilities.SourceGenerators.csproj" PrivateAssets="all"/>
+		<ProjectReference Include="..\TypeUtilities.SourceGenerators\TypeUtilities.SourceGenerators.csproj" PrivateAssets="all" />
 	</ItemGroup>
 
 	<ItemGroup>

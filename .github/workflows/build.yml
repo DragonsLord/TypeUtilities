@@ -24,3 +24,10 @@ jobs:
         run: dotnet build --no-restore
       - name: Test
         run: dotnet test --no-build --verbosity normal
+      - name: Pack
+        run: dotnet pack src/TypeUtilities/TypeUtilities.csproj --no-build -o lib
+      - name: Upload a Build Artifact
+        uses: actions/upload-artifact@v3.1.0
+        with:
+          name: lib
+          path: lib
