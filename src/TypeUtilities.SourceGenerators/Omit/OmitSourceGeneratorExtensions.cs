@@ -1,5 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System.Diagnostics;
+using TypeUtilities.SourceGenerators.Diagnostics;
 using TypeUtilities.SourceGenerators.Helpers;
 
 namespace TypeUtilities.SourceGenerators.Omit;
@@ -17,13 +19,13 @@ internal static class OmitSourceGeneratorExtensions
 
         context.RegisterSourceOutput(attributes, static (context, tuple) =>
         {
+            var token = context.CancellationToken;
+            var attributeSyntax = tuple.Left.Left!;
+            var types = tuple.Left.Right!;
+            var compilation = tuple.Right!;
+
             try
             {
-                var token = context.CancellationToken;
-                var attributeSyntax = tuple.Left.Left!;
-                var types = tuple.Left.Right!;
-                var compilation = tuple.Right!;
-
                 if (!attributeSyntax.TryFindParent<TypeDeclarationSyntax>(out var targetTypeSyntax, token))
                     return;
 
@@ -46,7 +48,10 @@ internal static class OmitSourceGeneratorExtensions
                                   members:  pickedMembers,
                            outputFileName:  $"{config.Target.Name}.omit.{config.Source.Name}.g.cs");
             }
-            catch { /* TODO: diagnostics? */ }
+            catch (Exception ex)
+            {
+                context.ReportInternalError(ex, attributeSyntax);
+            }
         });
 
         return context;
