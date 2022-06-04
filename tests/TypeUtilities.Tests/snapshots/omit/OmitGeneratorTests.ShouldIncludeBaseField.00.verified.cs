@@ -3,6 +3,6 @@ namespace PickTests;
 
 public partial class DoNotInclude
 {
-    public int Value { get; set; }
-    public System.DateTime Created { get; set; }
+	public int Value { get; set; }
+	public System.DateTime Created { get; set; }
 }

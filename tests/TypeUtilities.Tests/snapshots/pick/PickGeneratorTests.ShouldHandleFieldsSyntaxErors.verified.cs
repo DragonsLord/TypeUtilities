@@ -3,5 +3,5 @@ namespace PickTests;
 
 public partial class TargetType
 {
-    public string Id { get; set; }
+	public string Id { get; set; }
 }

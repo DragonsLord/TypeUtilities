@@ -45,13 +45,13 @@ internal static class PickSourceGeneratorExtensions
                 var pickedMembers = config.Fields
                     .Select(f => config.Source.GetMember(f, config.IncludeBaseTypes, context.CancellationToken));
 
-                // TODO: check and report duplicate members
+                // TODO: check and report duplicate members (maybe separate anylizer?)
 
                 context.WriteType(
-                               @namespace: config.Target.ContainingNamespace,
                     typeDeclarationSyntax: targetTypeSyntax,
                                   members: pickedMembers,
-                           outputFileName: $"{config.Target.Name}.pick.{config.Source.Name}.g.cs");
+                           outputFileName: $"{config.Target.Name}.pick.{config.Source.Name}.g.cs",
+                                    token: token);
             }
             catch (Exception ex)
             {

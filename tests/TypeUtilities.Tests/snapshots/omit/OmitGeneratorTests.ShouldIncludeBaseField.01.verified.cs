@@ -3,6 +3,5 @@ namespace PickTests;
 
 public partial class IncludeByDefault
 {
-    public System.Guid Id { get; set; }
-    public int Count { get; set; }
+	public System.Guid Id { get; set; }
 }

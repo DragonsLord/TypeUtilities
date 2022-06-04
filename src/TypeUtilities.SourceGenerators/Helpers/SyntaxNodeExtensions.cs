@@ -28,7 +28,7 @@ namespace TypeUtilities.SourceGenerators.Helpers
             return compilation.GetSemanticModel(syntaxNode.SyntaxTree).GetSymbolInfo(syntaxNode, token).Symbol;
         }
 
-        public static string GetNamespace(this SyntaxNode node, CancellationToken token = default)
+        public static BaseNamespaceDeclarationSyntax? GetNamespace(this SyntaxNode node, CancellationToken token = default)
         {
             var currNode = node;
             while (currNode is not BaseNamespaceDeclarationSyntax)
@@ -37,15 +37,15 @@ namespace TypeUtilities.SourceGenerators.Helpers
 
                 currNode = currNode.Parent;
                 if (currNode is null)
-                    return string.Empty;
+                    return null;
             }
             var namespaceDeclaration = (BaseNamespaceDeclarationSyntax)currNode;
-            return namespaceDeclaration.Name.ToString();
+            return namespaceDeclaration;
         }
 
         public static string GetFullName(this TypeDeclarationSyntax typeNode, CancellationToken token = default)
         {
-            var @namespace = typeNode.GetNamespace(token);
+            var @namespace = typeNode.GetNamespace(token)?.Name.ToString() ?? string.Empty;
             var typeName = typeNode.Identifier.ToString();
             return string.IsNullOrEmpty(@namespace) ? typeName : $"{@namespace}.{typeName}";
         }

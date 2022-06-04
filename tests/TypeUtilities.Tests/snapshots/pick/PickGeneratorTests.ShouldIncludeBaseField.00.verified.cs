@@ -3,5 +3,5 @@ namespace PickTests;
 
 public partial class DoNotInclude
 {
-    public System.Guid Id { get; set; }
+	public System.Guid Id { get; set; }
 }

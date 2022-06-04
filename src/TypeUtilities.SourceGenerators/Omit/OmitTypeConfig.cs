@@ -37,8 +37,7 @@ internal class OmitTypeConfig
 
         var namedArgs = attributeData.NamedArguments.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
 
-        var includeBaseTypes = namedArgs.GetParamValue("IncludeBaseTypes", true);
-        fields = namedArgs.GetParamValues("Fields", fields);
+        var includeBaseTypes = namedArgs.GetParamValue("IncludeBaseTypes", false);
 
         return new OmitTypeConfig(sourceTypeSymbol, targetTypeSymbol, fields, includeBaseTypes);
     }

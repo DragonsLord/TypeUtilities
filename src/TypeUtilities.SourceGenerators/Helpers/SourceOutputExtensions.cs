@@ -9,20 +9,22 @@ namespace TypeUtilities.SourceGenerators.Helpers
     {
         public static void WriteType(
             this SourceProductionContext context,
-            INamespaceSymbol @namespace, // Could be inferred from typeDeclarationSyntax
             TypeDeclarationSyntax typeDeclarationSyntax,
             IEnumerable<ISymbol?> members,
-            string outputFileName)
+            string outputFileName,
+            CancellationToken token = default)
         {
-            var sourceBuilder = new StringBuilder();
+            var sourceBuilder = new SourceBuilder();
 
-            if (!@namespace.IsGlobalNamespace)
+            var @namespace = typeDeclarationSyntax.GetNamespace(token);
+
+            if (@namespace is not null)
             {
-                sourceBuilder.AppendLine($"namespace {@namespace.ToDisplayString()};\n");
+                var fileScoped = @namespace is FileScopedNamespaceDeclarationSyntax;
+                sourceBuilder.AddNamespace(@namespace.Name.ToString(), fileScoped);
             }
 
-            sourceBuilder.AppendLine($"{typeDeclarationSyntax.Modifiers} {typeDeclarationSyntax.Keyword} {typeDeclarationSyntax.Identifier}");
-            sourceBuilder.AppendLine("{");
+            sourceBuilder.AddTypeDeclaration(typeDeclarationSyntax.Modifiers, typeDeclarationSyntax.Keyword, typeDeclarationSyntax.Identifier);
 
             foreach (var member in members)
             {
@@ -36,7 +38,7 @@ namespace TypeUtilities.SourceGenerators.Helpers
                     var propType = prop.Type.ToDisplayString();
                     var propName = prop.Name;
 
-                    sourceBuilder.AppendLine($"    {accessibility} {propType} {propName}" + " { get; set; }");
+                    sourceBuilder.AddLine($"{accessibility} {propType} {propName}" + " { get; set; }");
                     continue;
                 }
 
@@ -45,13 +47,11 @@ namespace TypeUtilities.SourceGenerators.Helpers
                     var propType = field.Type.ToDisplayString();
                     var propName = field.Name;
 
-                    sourceBuilder.AppendLine($"    {accessibility} {propType} {propName};");
+                    sourceBuilder.AddLine($"{accessibility} {propType} {propName};");
                 }
             }
 
-            sourceBuilder.AppendLine("}");
-
-            var source = sourceBuilder.ToString().Replace("\r\n", "\n").Replace("\n", Environment.NewLine);
+            var source = sourceBuilder.Build();
 
             context.AddSource(outputFileName, SourceText.From(source, Encoding.Unicode));
         }

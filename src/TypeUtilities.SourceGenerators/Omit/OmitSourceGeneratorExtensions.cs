@@ -49,10 +49,10 @@ internal static class OmitSourceGeneratorExtensions
                     .Where(m => !config.Fields.Contains(m.Name));
 
                 context.WriteType(
-                               @namespace:  config.Target.ContainingNamespace,
-                    typeDeclarationSyntax:  targetTypeSyntax,
-                                  members:  pickedMembers,
-                           outputFileName:  $"{config.Target.Name}.omit.{config.Source.Name}.g.cs");
+                    typeDeclarationSyntax: targetTypeSyntax,
+                                  members: pickedMembers,
+                           outputFileName: $"{config.Target.Name}.omit.{config.Source.Name}.g.cs",
+                                    token: token);
             }
             catch (Exception ex)
             {
