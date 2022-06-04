@@ -51,7 +51,7 @@ internal static class OmitSourceGeneratorExtensions
                 context.WriteType(
                     typeDeclarationSyntax: targetTypeSyntax,
                                   members: pickedMembers,
-                           outputFileName: $"{config.Target.Name}.omit.{config.Source.Name}.g.cs"
+                           outputFileName: $"{config.Target.Name}.omit.{config.Source.Name}.g.cs",
                                     token: token);
             }
             catch (Exception ex)
