@@ -1,4 +1,5 @@
 ﻿using Microsoft.CodeAnalysis;
+using TypeUtilities.Abstractions;
 using TypeUtilities.SourceGenerators.Helpers;
 
 namespace TypeUtilities.SourceGenerators.Omit;
@@ -9,13 +10,15 @@ internal class OmitTypeConfig
     public INamedTypeSymbol Target { get; }
     public string[] Fields { get; }
     public bool IncludeBaseTypes { get; set; }
+    public string MemberDeclarationFormat { get; set; }
 
-    private OmitTypeConfig(INamedTypeSymbol source, INamedTypeSymbol target, string[] fields, bool includeBaseTypes)
+    private OmitTypeConfig(INamedTypeSymbol source, INamedTypeSymbol target, string[] fields, bool includeBaseTypes, string memberDeclarationFormat)
     {
         Source = source;
         Target = target;
         Fields = fields;
         IncludeBaseTypes = includeBaseTypes;
+        MemberDeclarationFormat = memberDeclarationFormat;
     }
 
     public static OmitTypeConfig? Create(INamedTypeSymbol targetTypeSymbol)
@@ -37,8 +40,10 @@ internal class OmitTypeConfig
 
         var namedArgs = attributeData.NamedArguments.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
 
-        var includeBaseTypes = namedArgs.GetParamValue("IncludeBaseTypes", false);
+        var includeBaseTypes = namedArgs.GetParamValue(nameof(OmitAttribute.IncludeBaseTypes), false);
+        var memberDeclarationFormat = namedArgs.GetParamValue(nameof(OmitAttribute.MemberDeclarationFormat), MemberDeclarationFormats.Source);
 
-        return new OmitTypeConfig(sourceTypeSymbol, targetTypeSymbol, fields, includeBaseTypes);
+
+        return new OmitTypeConfig(sourceTypeSymbol, targetTypeSymbol, fields, includeBaseTypes, memberDeclarationFormat);
     }
 }

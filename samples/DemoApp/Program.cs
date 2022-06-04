@@ -1,6 +1,8 @@
 ﻿using DemoApp.Enums;
 using TypeUtilities;
 
+using static TypeUtilities.Abstractions.MemberDeclarationFormats;
+
 namespace DemoApp;
 
 public static class Program
@@ -33,8 +35,13 @@ public partial class TargetType
     public double AdditionalValue { get; set; }
 }
 
-[Omit(typeof(SourceType), "Value", IncludeBaseTypes = false)]
+[Omit(typeof(SourceType), "Value", MemberDeclarationFormat = PublicGetSetProp)]
 public partial class OmittedType
 {
     public int MyProperty { get; set; }
+}
+
+[Omit(typeof(SourceType), MemberDeclarationFormat = $"{Tokens.Accessibility} string Mapped{Tokens.Name}{Tokens.Accessors}")]
+public partial class BasicallyMap
+{
 }

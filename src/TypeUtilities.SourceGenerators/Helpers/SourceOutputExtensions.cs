@@ -3,14 +3,26 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using System.Text;
 
+using static TypeUtilities.Abstractions.MemberDeclarationFormats;
+
 namespace TypeUtilities.SourceGenerators.Helpers
 {
     internal static class SourceOutputExtensions
     {
+        private static string ApplyFormat(string format, string accessibility, string type, string name, string accessors = "")
+        {
+            return format
+                .Replace(Tokens.Accessibility, accessibility)
+                .Replace(Tokens.Type, type)
+                .Replace(Tokens.Name, name)
+                .Replace(Tokens.Accessors, accessors);
+        }
+
         public static void WriteType(
             this SourceProductionContext context,
             TypeDeclarationSyntax typeDeclarationSyntax,
             IEnumerable<ISymbol?> members,
+            string memberDeclarationFormat,
             string outputFileName,
             CancellationToken token = default)
         {
@@ -35,19 +47,20 @@ namespace TypeUtilities.SourceGenerators.Helpers
 
                 if (member is IPropertySymbol prop)
                 {
-                    var propType = prop.Type.ToDisplayString();
-                    var propName = prop.Name;
+                    var type = prop.Type.ToDisplayString();
+                    var name = prop.Name;
+                    var accessors = " " + prop.GetAccessors();
 
-                    sourceBuilder.AddLine($"{accessibility} {propType} {propName}" + " { get; set; }");
+                    sourceBuilder.AddLine(ApplyFormat(memberDeclarationFormat, accessibility, type, name, accessors));
                     continue;
                 }
 
                 if (member is IFieldSymbol field)
                 {
-                    var propType = field.Type.ToDisplayString();
-                    var propName = field.Name;
+                    var type = field.Type.ToDisplayString();
+                    var name = field.Name;
 
-                    sourceBuilder.AddLine($"{accessibility} {propType} {propName};");
+                    sourceBuilder.AddLine(ApplyFormat(memberDeclarationFormat, accessibility, type, name));
                 }
             }
 

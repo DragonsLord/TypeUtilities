@@ -51,6 +51,7 @@ internal static class OmitSourceGeneratorExtensions
                 context.WriteType(
                     typeDeclarationSyntax: targetTypeSyntax,
                                   members: pickedMembers,
+                  memberDeclarationFormat: config.MemberDeclarationFormat,
                            outputFileName: $"{config.Target.Name}.omit.{config.Source.Name}.g.cs",
                                     token: token);
             }
