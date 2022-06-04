@@ -10,7 +10,7 @@ public static class MemberDeclarationFormats
         public const string Accessors = "{accessors}";
     }
 
-    public const string Source = $"{Tokens.Accessibility} {Tokens.Type} {Tokens.Name}{Tokens.Accessors};";
+    public const string Source = $"{Tokens.Accessibility} {Tokens.Type} {Tokens.Name}{Tokens.Accessors}";
 
     public const string GetSetProp = $"{Tokens.Accessibility} {Tokens.Type} {Tokens.Name} {{ get; set; }}";
     public const string GetProp = $"{Tokens.Accessibility} {Tokens.Type} {Tokens.Name} {{ get; }}";

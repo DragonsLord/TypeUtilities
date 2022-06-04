@@ -9,7 +9,7 @@ namespace TypeUtilities.SourceGenerators.Helpers
 {
     internal static class SourceOutputExtensions
     {
-        private static string ApplyFormat(string format, string accessibility, string type, string name, string accessors = "")
+        private static string ApplyFormat(string format, string accessibility, string type, string name, string accessors)
         {
             return format
                 .Replace(Tokens.Accessibility, accessibility)
@@ -60,7 +60,7 @@ namespace TypeUtilities.SourceGenerators.Helpers
                     var type = field.Type.ToDisplayString();
                     var name = field.Name;
 
-                    sourceBuilder.AddLine(ApplyFormat(memberDeclarationFormat, accessibility, type, name));
+                    sourceBuilder.AddLine(ApplyFormat(memberDeclarationFormat, accessibility, type, name, ";"));
                 }
             }
 
