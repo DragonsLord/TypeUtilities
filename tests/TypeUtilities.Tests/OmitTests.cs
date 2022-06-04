@@ -16,8 +16,17 @@ public class OmitGeneratorTests
         _fixture = compilationFixture;
     }
 
-    [Fact]
-    public Task ShouldAddNotSpecifiedField()
+    [Theory]
+    [InlineData("public", "class")]
+    [InlineData("internal", "class")]
+    [InlineData("private", "class")]
+    [InlineData("public", "struct")]
+    [InlineData("internal", "struct")]
+    [InlineData("private", "struct")]
+    [InlineData("public", "record")]
+    [InlineData("internal", "record")]
+    [InlineData("private", "record")]
+    public Task ShouldAddNotSpecifiedField(string accessibility, string typeKind)
     {
         // The source code to test
         var source = @"
@@ -33,14 +42,13 @@ public class SourceType
     public DateTime Created { get; set; }
 }
 
-[Omit(typeof(SourceType), nameof(SourceType.Value))]
-public partial class TargetType
-{
+[Omit(typeof(SourceType), nameof(SourceType.Value))]"+"\n"+
+$"{accessibility} partial {typeKind} TargetType"+
+@"{
     public double AdditionalValue { get; set; }
 }
 ";
-
-        return Verify(source);
+        return Verify(source, accessibility, typeKind);
     }
 
     [Fact] //TODO: Theory
@@ -78,6 +86,34 @@ public partial class IncludeExplicitly {}
 
         return Verify(source);
     }
+
+    #region Diagnostics
+    [Fact]
+    public Task ShouldRequirePartialModifier()
+    {
+        // The source code to test
+        var source = @"
+using System;
+using TypeUtilities;
+
+namespace PickTests;
+
+public class SourceType
+{
+    public Guid Id { get; set; }
+    public DateTime Created { get; set; }
+}
+
+[Omit(typeof(SourceType), nameof(SourceType.Id), ""Created"")]
+public class TargetType
+{
+    public double AdditionalValue { get; set; }
+}
+";
+
+        return Verify(source);
+    }
+    #endregion
 
 
     #region SyntaxErrors
@@ -171,5 +207,10 @@ public partial class NameError {}
     private Task Verify(string source)
     {
         return _fixture.Verify(source, "omit");
+    }
+
+    private Task Verify(string source, params string[] parameters)
+    {
+        return _fixture.Verify(source, "omit", parameters);
     }
 }

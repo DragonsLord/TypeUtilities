@@ -29,6 +29,12 @@ internal static class PickSourceGeneratorExtensions
                 if (!attributeSyntax.TryFindParent<TypeDeclarationSyntax>(out var targetTypeSyntax, token))
                     return;
 
+                if (!targetTypeSyntax.Modifiers.Any(m => m.ValueText == "partial"))
+                {
+                    context.ReportMissingPartialModifier(targetTypeSyntax);
+                    return;
+                }
+
                 if (!targetTypeSyntax.TryCompileNamedTypeSymbol(compilation, token, out var targetTypeSymbol))
                     return;
 

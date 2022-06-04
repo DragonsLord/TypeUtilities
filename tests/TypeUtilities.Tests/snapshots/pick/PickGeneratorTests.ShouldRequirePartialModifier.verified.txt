@@ -1,0 +1,17 @@
+﻿{
+  Diagnostics: [
+    {
+      Id: TU001,
+      Title: Missing Partial Modifier,
+      Severity: Error,
+      WarningLevel: 0,
+      Location: : (14,13)-(14,23),
+      Description: ,
+      HelpLink: ,
+      MessageFormat: {0} should have partial modifier,
+      Message: TargetType should have partial modifier,
+      Category: TypeUtilities,
+      CustomTags: []
+    }
+  ]
+}
