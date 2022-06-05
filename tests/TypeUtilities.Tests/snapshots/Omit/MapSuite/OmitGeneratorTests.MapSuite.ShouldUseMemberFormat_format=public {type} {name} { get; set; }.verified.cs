@@ -1,5 +1,5 @@
-﻿//HintName: TargetType.pick.SourceType.g.cs
-namespace PickTests;
+﻿//HintName: TargetType.omit.SourceType.g.cs
+namespace MapTests;
 
 public partial class TargetType
 {

@@ -1,5 +1,5 @@
 ﻿//HintName: ValueError.omit.SourceType.g.cs
-namespace PickTests;
+namespace OmitTests;
 
 public partial class ValueError
 {

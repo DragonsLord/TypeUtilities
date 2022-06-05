@@ -1,5 +1,5 @@
 ﻿//HintName: TargetType1.omit.SourceTy.g.cs
-namespace PickTests;
+namespace OmitTests;
 
 public partial class TargetType1
 {

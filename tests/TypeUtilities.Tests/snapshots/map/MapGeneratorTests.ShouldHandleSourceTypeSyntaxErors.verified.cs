@@ -1,5 +1,5 @@
 ﻿//HintName: TargetType1.map.SourceTy.g.cs
-namespace PickTests;
+namespace MapTests;
 
 public partial class TargetType1
 {

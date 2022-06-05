@@ -1,7 +1,8 @@
 ﻿//HintName: TargetType.omit.SourceType.g.cs
-namespace OmitTests;
+namespace MapTests;
 
 public partial class TargetType
 {
-	public int Value { get; set; }
+	public System.Guid Id;
+	protected System.DateTime Created;
 }

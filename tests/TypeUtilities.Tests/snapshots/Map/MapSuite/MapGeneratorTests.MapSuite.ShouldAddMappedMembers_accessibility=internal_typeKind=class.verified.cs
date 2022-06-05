@@ -1,7 +1,7 @@
-﻿//HintName: ValueError.map.SourceType.g.cs
+﻿//HintName: TargetType.map.SourceType.g.cs
 namespace MapTests;
 
-public partial class ValueError
+internal partial class TargetType
 {
 	public System.Guid Id { get; set; }
 	public int Value { get; set; }
