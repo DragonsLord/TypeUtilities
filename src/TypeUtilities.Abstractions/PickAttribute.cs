@@ -1,20 +1,12 @@
-﻿using TypeUtilities.Abstractions;
+﻿namespace TypeUtilities;
 
-namespace TypeUtilities;
-
-// TODO: add interface support
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
-public sealed class PickAttribute : Attribute
+public sealed class PickAttribute : MapAttribute
 {
-    public Type SourceType { get; }
     public string[] Fields { get; }
 
-    public bool IncludeBaseTypes { get; set; } = false;
-    public string MemberDeclarationFormat { get; set; } = MemberDeclarationFormats.Source;
-
-    public PickAttribute(Type type, params string[] fields)
+    public PickAttribute(Type type, params string[] fields) : base(type)
     {
-        SourceType = type;
         Fields = fields;
     }
 }
