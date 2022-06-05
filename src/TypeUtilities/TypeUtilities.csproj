@@ -4,7 +4,7 @@
 		<TargetFramework>netstandard2.0</TargetFramework>
 		<IncludeBuildOutput>false</IncludeBuildOutput>
 		<PackageId>TypeUtilities</PackageId>
-		<Version>0.0.1-alpha1</Version>
+		<Version>0.0.1-alpha2</Version>
 		<Authors>Yevhenii Serdiuk</Authors>
 		<PackageProjectUrl>https://github.com/DragonsLord/TypeUtilities</PackageProjectUrl>
 		<PackageTags>Type Utilities;Type Mapping;Pick;Omit;Source Generators;Generator;Generation;Codegen</PackageTags>
