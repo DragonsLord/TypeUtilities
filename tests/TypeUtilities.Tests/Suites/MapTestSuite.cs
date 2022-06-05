@@ -105,13 +105,13 @@ public class SourceType : BaseType
 }
 
 " + $"[{_attributeName}(typeof(SourceType){_additionCtorArgs})]\n" +
-@"public partial class IncludeByDefault {}
+@"public partial class DoNotIncludeByDefault {}
 
 " + $"[{_attributeName}(typeof(SourceType){_additionCtorArgs}, IncludeBaseTypes = false)]\n" +
-@"public partial class DoNotInclude {}
+@"public partial class DoNotIncludeExplicitly {}
 
 " + $"[{_attributeName}(typeof(SourceType){_additionCtorArgs}, IncludeBaseTypes = true)]\n" +
-@"public partial class IncludeExplicitly {}";
+@"public partial class Include {}";
 
             return Verify(source);
         }

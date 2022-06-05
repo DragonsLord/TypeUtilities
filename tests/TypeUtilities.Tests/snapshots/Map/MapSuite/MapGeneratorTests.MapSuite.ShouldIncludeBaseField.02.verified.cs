@@ -1,7 +1,7 @@
-﻿//HintName: IncludeExplicitly.map.SourceType.g.cs
+﻿//HintName: Include.map.SourceType.g.cs
 namespace MapTests;
 
-public partial class IncludeExplicitly
+public partial class Include
 {
 	public System.Guid Id { get; set; }
 	public int Value { get; set; }

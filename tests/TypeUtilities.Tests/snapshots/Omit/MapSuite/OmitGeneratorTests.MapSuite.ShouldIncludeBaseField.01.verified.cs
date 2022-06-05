@@ -1,7 +1,7 @@
-﻿//HintName: IncludeByDefault.omit.SourceType.g.cs
+﻿//HintName: DoNotIncludeExplicitly.omit.SourceType.g.cs
 namespace MapTests;
 
-public partial class IncludeByDefault
+public partial class DoNotIncludeExplicitly
 {
 	public System.Guid Id { get; set; }
 	public System.DateTime Created { get; set; }
