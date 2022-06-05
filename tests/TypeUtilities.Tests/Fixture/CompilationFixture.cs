@@ -45,7 +45,7 @@ namespace TypeUtilities.Tests.Fixture
 
             var driver = CSharpGeneratorDriver.Create(generator).RunGenerators(compilation);
 
-            return Verifier.Verify(driver, settings).UseDirectory(Path.Combine("../snapshots", snapshotPath));
+            return Verifier.Verify(driver, settings).UseDirectory(Path.Combine("..", "snapshots", snapshotPath));
         }
     }
 }
