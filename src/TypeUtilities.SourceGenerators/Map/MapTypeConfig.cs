@@ -2,7 +2,7 @@
 using TypeUtilities.Abstractions;
 using TypeUtilities.SourceGenerators.Helpers;
 
-namespace TypeUtilities.SourceGenerators.Pick;
+namespace TypeUtilities.SourceGenerators.Map;
 
 internal class MapTypeConfig
 {
@@ -19,6 +19,21 @@ internal class MapTypeConfig
         MemberDeclarationFormat = memberDeclarationFormat;
     }
 
+    protected MapTypeConfig(MapTypeConfig config)
+    {
+        Source = config.Source;
+        Target = config.Target;
+        IncludeBaseTypes = config.IncludeBaseTypes;
+        MemberDeclarationFormat = config.MemberDeclarationFormat;
+    }
+
+    public virtual IEnumerable<ISymbol> GetMembers()
+    {
+        return Source
+            .GetExplicitMembers(IncludeBaseTypes)
+            .Where(m => m is IPropertySymbol || m is IFieldSymbol);
+    }
+
     public static MapTypeConfig? Create(INamedTypeSymbol targetTypeSymbol)
     {
         var attributeData = targetTypeSymbol.GetAttributeData<MapAttribute>();
@@ -26,12 +41,15 @@ internal class MapTypeConfig
         if (attributeData is null)
             return null;
 
+        return Create(targetTypeSymbol, attributeData);
+    }
+
+    public static MapTypeConfig? Create(INamedTypeSymbol targetTypeSymbol, AttributeData attributeData)
+    {
         if (attributeData.ConstructorArguments.Length == 0)
             return null;
 
-        var sourceTypeSymbol = attributeData.ConstructorArguments[0].Value as INamedTypeSymbol; // return null if null :)
-
-        if (sourceTypeSymbol is null)
+        if (attributeData.ConstructorArguments[0].Value is not INamedTypeSymbol sourceTypeSymbol)
             return null;
 
         var namedArgs = attributeData.NamedArguments.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
