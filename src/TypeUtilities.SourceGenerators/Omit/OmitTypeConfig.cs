@@ -1,4 +1,5 @@
 ﻿using Microsoft.CodeAnalysis;
+using TypeUtilities.Abstractions;
 using TypeUtilities.SourceGenerators.Helpers;
 using TypeUtilities.SourceGenerators.Map;
 
@@ -16,7 +17,7 @@ internal class OmitTypeConfig : MapTypeConfig
 
     public override IEnumerable<ISymbol> GetMembers()
     {
-        return base.GetMembers().Where(m => !Fields.Contains(m.Name));
+        return GetMembers(MemberSelections.DeclaredInstanceProperties).Where(m => !Fields.Contains(m.Name));
     }
 
     public static new OmitTypeConfig? Create(INamedTypeSymbol targetTypeSymbol)

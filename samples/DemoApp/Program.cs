@@ -1,5 +1,6 @@
 ﻿using DemoApp.Enums;
 using TypeUtilities;
+using TypeUtilities.Abstractions;
 
 using static TypeUtilities.Abstractions.MemberDeclarationFormats;
 
@@ -26,7 +27,9 @@ public class SourceType : Base
     public int Value { get; set; }
     public DateTime Created { get; set; }
 
-    public CustomType SrcType => CustomType.First;
+    public static CustomType SrcType => CustomType.First; //TODO: support static
+
+    public readonly int id = 1;
 }
 
 [Pick(typeof(SourceType), "Id", nameof(SourceType.BaseType), IncludeBaseTypes = true)]
@@ -41,7 +44,9 @@ public partial class OmittedType
     public int MyProperty { get; set; }
 }
 
-[Map(typeof(SourceType), MemberDeclarationFormat = $"{Tokens.Accessibility} string Mapped{Tokens.Name}{Tokens.Accessors}")]
+[Map(typeof(SourceType),
+    MemberDeclarationFormat = $"{Tokens.Accessibility} string Mapped{Tokens.Name}{Tokens.Accessors}",
+    MemberSelection = MemberSelections.PublicDeclaredGetSetProperties)]
 public partial class BasicallyMap
 {
 }

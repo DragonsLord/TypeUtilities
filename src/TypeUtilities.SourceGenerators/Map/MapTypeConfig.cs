@@ -8,15 +8,17 @@ internal class MapTypeConfig
 {
     public INamedTypeSymbol Source { get; }
     public INamedTypeSymbol Target { get; }
-    public bool IncludeBaseTypes { get; set; }
+    public bool IncludeBaseTypes { get; set; } //TODO: remove in favior of member selection
     public string MemberDeclarationFormat { get; set; }
+    public MemberSelectionFlags MemberSelection { get; set; }
 
-    private MapTypeConfig(INamedTypeSymbol source, INamedTypeSymbol target, bool includeBaseTypes, string memberDeclarationFormat)
+    private MapTypeConfig(INamedTypeSymbol source, INamedTypeSymbol target, bool includeBaseTypes, string memberDeclarationFormat, MemberSelectionFlags memberSelectionFlags)
     {
         Source = source;
         Target = target;
         IncludeBaseTypes = includeBaseTypes;
         MemberDeclarationFormat = memberDeclarationFormat;
+        MemberSelection = memberSelectionFlags;
     }
 
     protected MapTypeConfig(MapTypeConfig config)
@@ -25,10 +27,15 @@ internal class MapTypeConfig
         Target = config.Target;
         IncludeBaseTypes = config.IncludeBaseTypes;
         MemberDeclarationFormat = config.MemberDeclarationFormat;
+        MemberSelection = config.MemberSelection;
     }
 
     public virtual IEnumerable<ISymbol> GetMembers()
+        => GetMembers(MemberSelections.DeclaredInstanceProperties);
+
+    public IEnumerable<ISymbol> GetMembers(MemberSelectionFlags defaultSelection)
     {
+        // TODO: apply selection
         return Source
             .GetExplicitMembers(IncludeBaseTypes)
             .Where(m => m is IPropertySymbol || m is IFieldSymbol);
@@ -56,7 +63,8 @@ internal class MapTypeConfig
 
         var includeBaseTypes = namedArgs.GetParamValue(nameof(MapAttribute.IncludeBaseTypes), false);
         var memberDeclarationFormat = namedArgs.GetParamValue(nameof(MapAttribute.MemberDeclarationFormat), MemberDeclarationFormats.Source);
+        var memberSelectionFlags = namedArgs.GetParamValue(nameof(MapAttribute.MemberSelection), MemberSelectionFlags.Default);
 
-        return new MapTypeConfig(sourceTypeSymbol, targetTypeSymbol, includeBaseTypes, memberDeclarationFormat);
+        return new MapTypeConfig(sourceTypeSymbol, targetTypeSymbol, includeBaseTypes, memberDeclarationFormat, memberSelectionFlags);
     }
 }

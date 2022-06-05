@@ -9,6 +9,7 @@ public class MapAttribute : Attribute
 
     public bool IncludeBaseTypes { get; set; } = false;
     public string MemberDeclarationFormat { get; set; } = MemberDeclarationFormats.Source;
+    public MemberSelectionFlags MemberSelection { get; set; } = MemberSelectionFlags.Default;
 
     public MapAttribute(Type type)
     {

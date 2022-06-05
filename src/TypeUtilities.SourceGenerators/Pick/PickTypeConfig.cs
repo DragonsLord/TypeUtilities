@@ -1,4 +1,5 @@
 ﻿using Microsoft.CodeAnalysis;
+using TypeUtilities.Abstractions;
 using TypeUtilities.SourceGenerators.Helpers;
 using TypeUtilities.SourceGenerators.Map;
 
@@ -16,7 +17,7 @@ internal class PickTypeConfig : MapTypeConfig
 
     public override IEnumerable<ISymbol> GetMembers()
     {
-        return base.GetMembers().Where(m => Fields.Contains(m.Name));
+        return GetMembers(MemberSelections.All).Where(m => Fields.Contains(m.Name));
     }
 
     public static new PickTypeConfig? Create(INamedTypeSymbol targetTypeSymbol)
