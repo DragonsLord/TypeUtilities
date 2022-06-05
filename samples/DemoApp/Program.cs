@@ -41,7 +41,7 @@ public partial class OmittedType
     public int MyProperty { get; set; }
 }
 
-[Omit(typeof(SourceType), MemberDeclarationFormat = $"{Tokens.Accessibility} string Mapped{Tokens.Name}{Tokens.Accessors}")]
+[Map(typeof(SourceType), MemberDeclarationFormat = $"{Tokens.Accessibility} string Mapped{Tokens.Name}{Tokens.Accessors}")]
 public partial class BasicallyMap
 {
 }

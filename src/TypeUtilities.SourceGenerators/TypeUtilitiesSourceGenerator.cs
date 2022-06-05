@@ -3,6 +3,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using TypeUtilities.SourceGenerators.Helpers;
 using TypeUtilities.SourceGenerators.Omit;
 using TypeUtilities.SourceGenerators.Pick;
+using TypeUtilities.SourceGenerators.Map;
 
 namespace TypeUtilities.SourceGenerators
 {
@@ -11,6 +12,7 @@ namespace TypeUtilities.SourceGenerators
     {
         public void Initialize(IncrementalGeneratorInitializationContext context)
         {
+            // we need this provider to monitor for changes in source types
             var typesDict = context.SyntaxProvider
                 .CreateSyntaxProvider(
                     predicate: static (node, _) => node is TypeDeclarationSyntax,
@@ -19,6 +21,7 @@ namespace TypeUtilities.SourceGenerators
                 .Select((types, ct) => types.ToDictionary(x => x.GetFullName(ct)));
 
             context
+                .CreateMapUtility(typesDict)
                 .CreatePickUtility(typesDict)
                 .CreateOmitUtility(typesDict);
         }

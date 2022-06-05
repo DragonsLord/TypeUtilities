@@ -1,5 +1,4 @@
 ﻿using System.Threading.Tasks;
-using TypeUtilities.Abstractions;
 using TypeUtilities.Tests.Fixture;
 using TypeUtilities.Tests.Suites;
 using VerifyXunit;
@@ -9,14 +8,14 @@ namespace TypeUtilities.Tests;
 
 [UsesVerify]
 [Collection("Compilation Collection")]
-public class PickGeneratorTests
+public class MapGeneratorTests
 {
     [UsesVerify]
     [Collection("Compilation Collection")]
-    public class MapSuite : MapTestSuite<PickAttribute>
+    public class MapSuite : MapTestSuite<MapAttribute>
     {
         public MapSuite(CompilationFixture compilationFixture)
-            : base(compilationFixture, "Pick", ", \"Id\", \"Created\", \"Score\"")
+            : base(compilationFixture, "Map")
         {
 
         }
@@ -24,10 +23,10 @@ public class PickGeneratorTests
 
     [UsesVerify]
     [Collection("Compilation Collection")]
-    public class DiagnosticsSuite : DiagnosticsTestSuite<PickAttribute>
+    public class DiagnosticsSuite : DiagnosticsTestSuite<MapAttribute>
     {
         public DiagnosticsSuite(CompilationFixture compilationFixture)
-            : base(compilationFixture, "Pick")
+            : base(compilationFixture, "Map")
         {
 
         }
@@ -35,61 +34,13 @@ public class PickGeneratorTests
 
     private readonly CompilationFixture _fixture;
 
-    public PickGeneratorTests(CompilationFixture compilationFixture)
+    public MapGeneratorTests(CompilationFixture compilationFixture)
     {
         _fixture = compilationFixture;
     }
 
-    [Fact]
-    public Task ShouldAddSpecifiedField()
-    {
-        // The source code to test
-        var source = @"
-using System;
-using TypeUtilities;
-
-namespace PickTests;
-
-public class SourceType
-{
-    public Guid Id { get; set; }
-    public int Value { get; set; }
-    public DateTime Created { get; set; }
-}
-
-[Pick(typeof(SourceType), nameof(SourceType.Id), ""Created"")]
-public partial class TargetType
-{
-    public double AdditionalValue { get; set; }
-}
-";
-        return Verify(source);
-    }
 
     #region SyntaxErrors
-    [Fact]
-    public Task ShouldHandleFieldsSyntaxErors()
-    {
-        var source = @"
-using TypeUtilities;
-
-namespace PickTests;
-
-public class SourceType
-{
-    public string Id { get; set; }
-    public int Value { get; set; }
-}
-
-[Pick(typeof(SourceType), nameof(SourceType.Id), ""adssf)]
-public partial class TargetType
-{
-    public double AdditionalValue { get; set; }
-}
-";
-
-        return Verify(source);
-    }
 
     [Fact]
     public Task ShouldHandleSourceTypeSyntaxErors()
@@ -97,7 +48,7 @@ public partial class TargetType
         var source = @"
 using TypeUtilities;
 
-namespace PickTests;
+namespace MapTests;
 
 public class SourceType
 {
@@ -105,13 +56,13 @@ public class SourceType
     public int Value { get; set; }
 }
 
-[Pick(typeof(SourceTy, nameof(SourceType.Id))]
+[Map(typeof(SourceTy)]
 public partial class TargetType1
 {
     public double AdditionalValue { get; set; }
 }
 
-[Pick(typ]
+[Map(typ]
 public partial class TargetType2
 {
     public double AdditionalValue { get; set; }
@@ -129,7 +80,7 @@ public partial class TargetType2
 using System;
 using TypeUtilities;
 
-namespace PickTests;
+namespace MapTests;
 
 public class BaseType
 {
@@ -143,10 +94,10 @@ public class SourceType : BaseType
     public DateTime Created { get; set; }
 }
 
-[Pick(typeof(SourceType), ""Id"", ""Score"",  IncludeBaseTypes = fal)]
+[Map(typeof(SourceType), IncludeBaseTypes = fal)]
 public partial class ValueError {}
 
-[Pick(typeof(SourceType), ""Id"", ""Score"", IncludeBaseType = false)]
+[Map(typeof(SourceType), IncludeBaseType = false)]
 public partial class NameError {}
 ";
 
@@ -156,6 +107,6 @@ public partial class NameError {}
 
     private Task Verify(string source)
     {
-        return _fixture.Verify(source, "Pick/Specific");
+        return _fixture.Verify(source, "Map/Specific");
     }
 }

@@ -1,13 +1,12 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using TypeUtilities.SourceGenerators.Helpers;
-using TypeUtilities.SourceGenerators.Diagnostics;
+using TypeUtilities.SourceGenerators.Map;
 
 namespace TypeUtilities.SourceGenerators.Pick;
 
 internal static class PickSourceGeneratorExtensions
 {
-
     public static IncrementalGeneratorInitializationContext CreatePickUtility(
         this IncrementalGeneratorInitializationContext context,
         IncrementalValueProvider<Dictionary<string, TypeDeclarationSyntax>> types)
@@ -19,45 +18,10 @@ internal static class PickSourceGeneratorExtensions
 
         context.RegisterSourceOutput(attributes, static (context, tuple) =>
         {
-            var token = context.CancellationToken;
             var attributeSyntax = tuple.Left.Left!;
-            var types = tuple.Left.Right!;
             var compilation = tuple.Right!;
 
-            try
-            {
-                if (!attributeSyntax.TryFindParent<TypeDeclarationSyntax>(out var targetTypeSyntax, token))
-                    return;
-
-                if (!targetTypeSyntax.Modifiers.Any(m => m.ValueText == "partial"))
-                {
-                    context.ReportMissingPartialModifier(targetTypeSyntax);
-                    return;
-                }
-
-                if (!targetTypeSyntax.TryCompileNamedTypeSymbol(compilation, token, out var targetTypeSymbol))
-                    return;
-
-                var config = PickTypeConfig.Create(targetTypeSymbol);
-                if (config is null)
-                    return;
-
-                var pickedMembers = config.Fields
-                    .Select(f => config.Source.GetMember(f, config.IncludeBaseTypes, context.CancellationToken));
-
-                // TODO: check and report duplicate members (maybe separate anylizer?)
-
-                context.WriteType(
-                    typeDeclarationSyntax: targetTypeSyntax,
-                                  members: pickedMembers,
-                  memberDeclarationFormat: config.MemberDeclarationFormat,
-                           outputFileName: $"{config.Target.Name}.pick.{config.Source.Name}.g.cs",
-                                    token: token);
-            }
-            catch (Exception ex)
-            {
-                context.ReportInternalError(ex, attributeSyntax);
-            }
+            context.AddMappedTypeSource("pick", attributeSyntax, compilation, PickTypeConfig.Create);
         });
 
         return context;
