@@ -26,5 +26,13 @@ namespace TypeUtilities.SourceGenerators.Helpers
                     .GetMembers()
                     .Where(m => !m.IsImplicitlyDeclared));
         }
+
+        public static string GetAccessors(this IPropertySymbol symbol)
+        {
+            var get = symbol.GetMethod is null ? string.Empty : " get;";
+            var set = symbol.SetMethod is null ? string.Empty : " set;";
+
+            return "{"+get+set+" }";
+        }
     }
 }

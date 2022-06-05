@@ -50,6 +50,7 @@ internal static class PickSourceGeneratorExtensions
                 context.WriteType(
                     typeDeclarationSyntax: targetTypeSyntax,
                                   members: pickedMembers,
+                  memberDeclarationFormat: config.MemberDeclarationFormat,
                            outputFileName: $"{config.Target.Name}.pick.{config.Source.Name}.g.cs",
                                     token: token);
             }

@@ -1,4 +1,6 @@
-﻿namespace TypeUtilities;
+﻿using TypeUtilities.Abstractions;
+
+namespace TypeUtilities;
 
 // TODO: add interface support
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
@@ -8,6 +10,7 @@ public sealed class OmitAttribute : Attribute
     public string[] Fields { get; }
 
     public bool IncludeBaseTypes { get; set; } = false;
+    public string MemberDeclarationFormat { get; set; } = MemberDeclarationFormats.Source;
 
     public OmitAttribute(Type type, params string[] fields)
     {

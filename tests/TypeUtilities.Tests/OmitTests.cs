@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using TypeUtilities.Abstractions;
 using TypeUtilities.Tests.Fixture;
 using VerifyXunit;
 using Xunit;
@@ -49,6 +50,33 @@ $"{accessibility} partial {typeKind} TargetType"+
 }
 ";
         return Verify(source, accessibility, typeKind);
+    }
+
+    [Theory]
+    [InlineData(MemberDeclarationFormats.Source)]
+    [InlineData(MemberDeclarationFormats.PublicGetSetProp)]
+    [InlineData(MemberDeclarationFormats.Field)]
+    [InlineData(MemberDeclarationFormats.GetProp)]
+    [InlineData("{accessibility} {type} Mapped{name} { get; set; }")]
+    public Task ShouldUseMemberFormat(string format)
+    {
+        // The source code to test
+        var source = @"
+using System;
+using TypeUtilities;
+
+namespace PickTests;
+
+public class SourceType
+{
+    public Guid Id { get; }
+    public int Value { get; set; }
+    protected DateTime Created;
+}
+
+"+$"[Omit(typeof(SourceType), MemberDeclarationFormat = \"{format}\"))]\n"+
+"public partial class TargetType{}";
+        return Verify(source, format);
     }
 
     [Fact] //TODO: Theory

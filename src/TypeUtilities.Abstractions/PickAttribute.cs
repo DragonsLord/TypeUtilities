@@ -1,4 +1,6 @@
-﻿namespace TypeUtilities;
+﻿using TypeUtilities.Abstractions;
+
+namespace TypeUtilities;
 
 // TODO: add interface support
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
@@ -8,6 +10,7 @@ public sealed class PickAttribute : Attribute
     public string[] Fields { get; }
 
     public bool IncludeBaseTypes { get; set; } = false;
+    public string MemberDeclarationFormat { get; set; } = MemberDeclarationFormats.Source;
 
     public PickAttribute(Type type, params string[] fields)
     {
