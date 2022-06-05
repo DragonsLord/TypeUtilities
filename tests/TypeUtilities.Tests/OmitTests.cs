@@ -155,6 +155,6 @@ public partial class NameError {}
 
     private Task Verify(string source)
     {
-        return _fixture.Verify(source, "Omit");
+        return _fixture.Verify(source, "Omit/Specific");
     }
 }

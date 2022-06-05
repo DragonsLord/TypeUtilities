@@ -156,6 +156,6 @@ public partial class NameError {}
 
     private Task Verify(string source)
     {
-        return _fixture.Verify(source, "Pick");
+        return _fixture.Verify(source, "Pick/Specific");
     }
 }
