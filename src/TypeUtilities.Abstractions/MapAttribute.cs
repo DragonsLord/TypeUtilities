@@ -7,9 +7,12 @@ public class MapAttribute : Attribute
 {
     public Type SourceType { get; }
 
-    public bool IncludeBaseTypes { get; set; } = false;
     public string MemberDeclarationFormat { get; set; } = MemberDeclarationFormats.Source;
-    public MemberSelectionFlags MemberSelection { get; set; } = MemberSelectionFlags.Default;
+
+    public bool IncludeBaseTypes { get; set; } = false;
+    public MemberAccessibilityFlags MemberAccessibilitySelection { get; set; } = MemberAccessibilityFlags.Public;
+    public MemberScopeFlags MemberScopeSelection { get; set; } = MemberScopeFlags.Instance;
+    public MemberKindFlags MemberKindSelection { get; set; } = MemberKindFlags.AnyProperty;
 
     public MapAttribute(Type type)
     {

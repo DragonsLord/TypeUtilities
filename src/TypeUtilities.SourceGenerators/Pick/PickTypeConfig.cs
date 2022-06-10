@@ -17,7 +17,7 @@ internal class PickTypeConfig : MapTypeConfig
 
     public override IEnumerable<ISymbol> GetMembers()
     {
-        return GetMembers(MemberSelections.All).Where(m => Fields.Contains(m.Name));
+        return base.GetMembers().Where(m => Fields.Contains(m.Name));
     }
 
     public static new PickTypeConfig? Create(INamedTypeSymbol targetTypeSymbol)

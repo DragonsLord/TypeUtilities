@@ -11,7 +11,7 @@ public static class Program
     public static void Main(string[] args)
     {
         var val = new OmittedType();
-        var props = typeof(OmittedType).GetProperties().Select(p => $"{p.PropertyType.Name} {p.Name}").ToArray();
+        var props = typeof(BasicallyMap).GetMembers().Select(p => $"{p.DeclaringType?.Name} {p.Name}").ToArray();
         Console.WriteLine(string.Join(", ", props));
     }
 }
@@ -30,6 +30,8 @@ public class SourceType : Base
     public static CustomType SrcType => CustomType.First; //TODO: support static
 
     public readonly int idField = 1;
+
+    public int anotherField = 1;
 }
 
 [Pick(typeof(SourceType), "Id", nameof(SourceType.BaseType), IncludeBaseTypes = true)]
@@ -46,7 +48,8 @@ public partial class OmittedType
 
 [Map(typeof(SourceType),
     MemberDeclarationFormat = $"{Tokens.Accessibility} string Mapped{Tokens.Name}{Tokens.Accessors}",
-    MemberSelection = MemberSelectionFlags.Declared | MemberSelectionFlags.Instance | MemberSelectionFlags.GetProperty)]
+    MemberScopeSelection = MemberScopeFlags.Any,
+    MemberKindSelection = MemberKindFlags.ReadonlyProperty | MemberKindFlags.WritableField)]
 public partial class BasicallyMap
 {
 }

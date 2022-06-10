@@ -17,7 +17,7 @@ internal class OmitTypeConfig : MapTypeConfig
 
     public override IEnumerable<ISymbol> GetMembers()
     {
-        return GetMembers(MemberSelections.DeclaredInstanceProperties).Where(m => !Fields.Contains(m.Name));
+        return base.GetMembers().Where(m => !Fields.Contains(m.Name));
     }
 
     public static new OmitTypeConfig? Create(INamedTypeSymbol targetTypeSymbol)

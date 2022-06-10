@@ -47,9 +47,19 @@ namespace TypeUtilities.SourceGenerators.Helpers
 
         public static T GetParamValue<T>(this IDictionary<string, TypedConstant> dict, string name, T defaultValue)
         {
-            if (dict.ContainsKey(name) && dict[name].Value is not null)
+            if (dict.TryGetValue(name, out var value) && value.Value is T resolved)
             {
-                return dict[name].Value is T resolved ? resolved : defaultValue;
+                return resolved;
+            }
+            return defaultValue;
+        }
+
+        public static T GetEnumParam<T>(this IDictionary<string, TypedConstant> dict, string name, T defaultValue)
+            where T : Enum
+        {
+            if (dict.TryGetValue(name, out var value) && value.Kind == TypedConstantKind.Enum && value.Value is not null)
+            {
+                return (T)value.Value;
             }
             return defaultValue;
         }

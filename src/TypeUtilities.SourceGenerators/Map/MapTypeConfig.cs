@@ -6,56 +6,81 @@ namespace TypeUtilities.SourceGenerators.Map;
 
 public static class MemberSelectionExtensions
 {
-    public static IEnumerable<Accessibility> GetSelectedAccessibility(this MemberSelectionFlags flags)
+    public static IEnumerable<ISymbol> FilterAccessibility(this IEnumerable<ISymbol> members, MemberAccessibilityFlags accessibilityFlags)
     {
-        if (flags.HasFlag(MemberSelectionFlags.Public))
-            yield return Accessibility.Public;
+        if (accessibilityFlags.HasFlag(MemberAccessibilityFlags.Any))
+            return members;
 
-        if (flags.HasFlag(MemberSelectionFlags.Private))
-            yield return Accessibility.Private;
+        var accessibilities = ListSelectedAccessibility().ToList();
+        return members.Where(x => accessibilities.Contains(x.DeclaredAccessibility));
 
-        if (flags.HasFlag(MemberSelectionFlags.Protected))
-            yield return Accessibility.Protected;
+        IEnumerable<Accessibility> ListSelectedAccessibility()
+        {
+            if (accessibilityFlags.HasFlag(MemberAccessibilityFlags.Public))
+                yield return Accessibility.Public;
+
+            if (accessibilityFlags.HasFlag(MemberAccessibilityFlags.Private))
+                yield return Accessibility.Private;
+
+            if (accessibilityFlags.HasFlag(MemberAccessibilityFlags.Protected))
+                yield return Accessibility.Protected;
+        }
     }
 
-    public static Func<ISymbol, bool> GetPropertyFilter(this MemberSelectionFlags flags)
+    public static IEnumerable<ISymbol> FilterScope(this IEnumerable<ISymbol> members, MemberScopeFlags scopeFlags)
     {
-        if (flags.HasFlag(MemberSelectionFlags.GetProperty | MemberSelectionFlags.SetProperty))
-        {
-            return x => x is IPropertySymbol;
-        }
+        if (scopeFlags.HasFlag(MemberScopeFlags.Any))
+            return members;
 
-        if (flags.HasFlag(MemberSelectionFlags.GetProperty))
-        {
-            return x => x is IPropertySymbol propertySymbol && propertySymbol.GetMethod is not null;
-        }
-
-        if (flags.HasFlag(MemberSelectionFlags.SetProperty))
-        {
-            return x => x is IPropertySymbol propertySymbol && propertySymbol.SetMethod is not null;
-        }
-
-        if (flags.HasFlag(MemberSelectionFlags.GetSetProperty))
-        {
-            return x => x is IPropertySymbol propertySymbol && propertySymbol.GetMethod is not null && propertySymbol.SetMethod is not null;
-        }
-
-        return x => false;
+        // Because we have only on of 2 options here, it's enough to check for static
+        // Side Effect: will return instance props when both Static and Instance flags are missing
+        var isStatic = scopeFlags.HasFlag(MemberScopeFlags.Static);
+        return members.Where(x => x.IsStatic == isStatic);
     }
 
-    public static Func<ISymbol, bool> GetFieldFilter(this MemberSelectionFlags flags)
+    public static IEnumerable<ISymbol> FilterKind(this IEnumerable<ISymbol> members, MemberKindFlags scopeFlags)
     {
-        if (flags.HasFlag(MemberSelectionFlags.WritableField))
+        var filterProperty = GetPropertyFilter();
+        var filterField = GetFieldFilter();
+        return members.Where(x => filterProperty(x) || filterField(x));
+
+        Func<ISymbol, bool> GetPropertyFilter()
         {
-            return x => x is IFieldSymbol;
+            if (scopeFlags.HasFlag(MemberKindFlags.AnyProperty))
+                return x => x is IPropertySymbol;
+
+            if (scopeFlags.HasFlag(MemberKindFlags.GetProperty))
+                return x => x is IPropertySymbol propertySymbol && propertySymbol.GetMethod is not null;
+
+            if (scopeFlags.HasFlag(MemberKindFlags.SetProperty))
+                return x => x is IPropertySymbol propertySymbol && propertySymbol.SetMethod is not null;
+
+            if (scopeFlags.HasFlag(MemberKindFlags.ReadonlyProperty))
+                return x => x is IPropertySymbol propertySymbol && propertySymbol.GetMethod is not null && propertySymbol.SetMethod is null;
+
+            if (scopeFlags.HasFlag(MemberKindFlags.WriteonlyProperty))
+                return x => x is IPropertySymbol propertySymbol && propertySymbol.SetMethod is not null && propertySymbol.GetMethod is null;
+
+            if (scopeFlags.HasFlag(MemberKindFlags.GetSetProperty))
+                return x => x is IPropertySymbol propertySymbol && propertySymbol.GetMethod is not null && propertySymbol.SetMethod is not null;
+
+            return x => false;
         }
 
-        if (flags.HasFlag(MemberSelectionFlags.ReadonlyField))
+        Func<ISymbol, bool> GetFieldFilter()
         {
-            return x => x is IFieldSymbol field && field.IsReadOnly;
-        }
+            if (scopeFlags.HasFlag(MemberKindFlags.WritableField))
+            {
+                return x => x is IFieldSymbol;
+            }
 
-        return x => false;
+            if (scopeFlags.HasFlag(MemberKindFlags.ReadonlyField))
+            {
+                return x => x is IFieldSymbol field && field.IsReadOnly;
+            }
+
+            return x => false;
+        }
     }
 }
 
@@ -63,66 +88,47 @@ internal class MapTypeConfig
 {
     public INamedTypeSymbol Source { get; }
     public INamedTypeSymbol Target { get; }
-    public bool IncludeBaseTypes { get; set; } //TODO: remove in favior of member selection
-    public string MemberDeclarationFormat { get; set; }
-    public MemberSelectionFlags MemberSelection { get; set; }
 
-    private MapTypeConfig(INamedTypeSymbol source, INamedTypeSymbol target, bool includeBaseTypes, string memberDeclarationFormat, MemberSelectionFlags memberSelectionFlags)
+    public string MemberDeclarationFormat { get; }
+
+    public bool IncludeBaseTypes { get; set; }
+    public MemberAccessibilityFlags MemberAccessibilitySelection { get; }
+    public MemberScopeFlags MemberScopeSelection { get; }
+    public MemberKindFlags MemberKindSelection { get; }
+
+    private MapTypeConfig(
+        INamedTypeSymbol source,
+        INamedTypeSymbol target,
+        string memberDeclarationFormat,
+        bool includeBaseTypes,
+        MemberAccessibilityFlags memberAccessibilitySelection,
+        MemberScopeFlags memberScopeSelection,
+        MemberKindFlags memberKindSelection)
     {
         Source = source;
         Target = target;
-        IncludeBaseTypes = includeBaseTypes;
         MemberDeclarationFormat = memberDeclarationFormat;
-        MemberSelection = memberSelectionFlags;
+        IncludeBaseTypes = includeBaseTypes;
+        MemberAccessibilitySelection = memberAccessibilitySelection;
+        MemberScopeSelection = memberScopeSelection;
+        MemberKindSelection = memberKindSelection;
     }
 
     protected MapTypeConfig(MapTypeConfig config)
     {
         Source = config.Source;
         Target = config.Target;
-        IncludeBaseTypes = config.IncludeBaseTypes;
         MemberDeclarationFormat = config.MemberDeclarationFormat;
-        MemberSelection = config.MemberSelection;
+        IncludeBaseTypes = config.IncludeBaseTypes;
     }
 
     public virtual IEnumerable<ISymbol> GetMembers()
-        => GetMembers(MemberSelections.DeclaredInstanceProperties);
-
-    public IEnumerable<ISymbol> GetMembers(MemberSelectionFlags defaultSelection)
     {
-        var selection = MemberSelection is MemberSelectionFlags.Default ? defaultSelection : MemberSelection;
-
-        var selectedMembers = Enumerable.Empty<ISymbol>();
-
-        if (selection.HasFlag(MemberSelectionFlags.Declared))
-        {
-            selectedMembers = Source.GetExplicitMembers();
-        }
-
-        if (selection.HasFlag(MemberSelectionFlags.Inherited))
-        {
-            selectedMembers = selectedMembers.Concat(Source.GetBaseTypes().SelectMany(t => t.GetExplicitMembers()));
-        }
-
-        if (!selection.HasFlag(MemberSelectionFlags.AnyAccessibility))
-        {
-            var accessibility = MemberSelection.GetSelectedAccessibility().ToList();
-            selectedMembers = selectedMembers.Where(x => accessibility.Contains(x.DeclaredAccessibility));
-        }
-
-        if (!selection.HasFlag(MemberSelectionFlags.AnyScope))
-        {
-            // Because we have only on of 2 options here, it's enough to check for static
-            // Side Effect: will return instance props when both Static and Instance flags are missing
-            var isStatic = MemberSelection.HasFlag(MemberSelectionFlags.Static);
-            selectedMembers = selectedMembers.Where(x => x.IsStatic == isStatic);
-        }
-
-        var propertyFilter = selection.GetPropertyFilter();
-        var fieldFilter = selection.GetFieldFilter();
-
-        return selectedMembers
-            .Where(m => propertyFilter(m) || fieldFilter(m));
+        return Source
+            .GetExplicitMembers(IncludeBaseTypes)
+            .FilterAccessibility(MemberAccessibilitySelection)
+            .FilterScope(MemberScopeSelection)
+            .FilterKind(MemberKindSelection);
     }
 
     public static MapTypeConfig? Create(INamedTypeSymbol targetTypeSymbol)
@@ -145,10 +151,20 @@ internal class MapTypeConfig
 
         var namedArgs = attributeData.NamedArguments.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
 
-        var includeBaseTypes = namedArgs.GetParamValue(nameof(MapAttribute.IncludeBaseTypes), false);
         var memberDeclarationFormat = namedArgs.GetParamValue(nameof(MapAttribute.MemberDeclarationFormat), MemberDeclarationFormats.Source);
-        var memberSelectionFlags = namedArgs.GetParamValue(nameof(MapAttribute.MemberSelection), MemberSelectionFlags.Default);
 
-        return new MapTypeConfig(sourceTypeSymbol, targetTypeSymbol, includeBaseTypes, memberDeclarationFormat, memberSelectionFlags);
+        var includeBaseTypes = namedArgs.GetParamValue(nameof(MapAttribute.IncludeBaseTypes), false);
+        var memberAccessibilitySelection = namedArgs.GetEnumParam(nameof(MapAttribute.MemberAccessibilitySelection), MemberAccessibilityFlags.Public);
+        var memberScopeSelection = namedArgs.GetEnumParam(nameof(MapAttribute.MemberScopeSelection), MemberScopeFlags.Instance);
+        var memberKindSelection = namedArgs.GetEnumParam(nameof(MapAttribute.MemberKindSelection), MemberKindFlags.AnyProperty);
+
+        return new MapTypeConfig(
+            sourceTypeSymbol,
+            targetTypeSymbol,
+            memberDeclarationFormat,
+            includeBaseTypes,
+            memberAccessibilitySelection,
+            memberScopeSelection,
+            memberKindSelection);
     }
 }
