@@ -29,7 +29,7 @@ public class SourceType : Base
 
     public static CustomType SrcType => CustomType.First; //TODO: support static
 
-    public readonly int id = 1;
+    public readonly int idField = 1;
 }
 
 [Pick(typeof(SourceType), "Id", nameof(SourceType.BaseType), IncludeBaseTypes = true)]
@@ -46,7 +46,7 @@ public partial class OmittedType
 
 [Map(typeof(SourceType),
     MemberDeclarationFormat = $"{Tokens.Accessibility} string Mapped{Tokens.Name}{Tokens.Accessors}",
-    MemberSelection = MemberSelections.PublicDeclaredGetSetProperties)]
+    MemberSelection = MemberSelectionFlags.Declared | MemberSelectionFlags.Instance | MemberSelectionFlags.GetProperty)]
 public partial class BasicallyMap
 {
 }

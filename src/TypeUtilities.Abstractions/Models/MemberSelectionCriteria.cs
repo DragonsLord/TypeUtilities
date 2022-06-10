@@ -1,5 +1,6 @@
 ﻿namespace TypeUtilities.Abstractions
 {
+    // This approach currently does not allow to filter out readonly or writeonly properties
     [Flags]
     public enum MemberSelectionFlags
     {

@@ -7,9 +7,9 @@ namespace TypeUtilities.SourceGenerators.Helpers
 {
     internal static class SymbolExtensions
     {
-        public static IEnumerable<ITypeSymbol> GetTypeHierarchy(this ITypeSymbol typeSymbol)
+        public static IEnumerable<ITypeSymbol> GetBaseTypes(this ITypeSymbol typeSymbol)
         {
-            var current = typeSymbol;
+            var current = typeSymbol?.BaseType;
 
             while (current is not null && current.SpecialType != SpecialType.System_Object)
             {
@@ -18,13 +18,9 @@ namespace TypeUtilities.SourceGenerators.Helpers
             }
         }
 
-        public static IEnumerable<ISymbol> GetExplicitMembers(this ITypeSymbol typeSymbol, bool includeBase)
+        public static IEnumerable<ISymbol> GetExplicitMembers(this ITypeSymbol typeSymbol)
         {
-            var types = includeBase ? typeSymbol.GetTypeHierarchy() : new ITypeSymbol[] { typeSymbol };
-
-            return types.SelectMany(type => type
-                    .GetMembers()
-                    .Where(m => !m.IsImplicitlyDeclared));
+            return typeSymbol.GetMembers().Where(m => !m.IsImplicitlyDeclared);
         }
 
         public static string GetAccessors(this IPropertySymbol symbol)
