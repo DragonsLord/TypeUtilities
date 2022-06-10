@@ -120,6 +120,9 @@ internal class MapTypeConfig
         Target = config.Target;
         MemberDeclarationFormat = config.MemberDeclarationFormat;
         IncludeBaseTypes = config.IncludeBaseTypes;
+        MemberAccessibilitySelection = config.MemberAccessibilitySelection;
+        MemberScopeSelection = config.MemberScopeSelection;
+        MemberKindSelection = config.MemberKindSelection;
     }
 
     public virtual IEnumerable<ISymbol> GetMembers()

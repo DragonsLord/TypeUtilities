@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Linq;
+using System.Threading.Tasks;
 using TypeUtilities.Abstractions;
 using TypeUtilities.Tests.Fixture;
 using Xunit;
@@ -66,6 +67,7 @@ $"{accessibility} partial {typeKind} TargetType" +
             var source = @"
 using System;
 using TypeUtilities;
+using TypeUtilities.Abstractions;
 
 namespace MapTests;
 
@@ -76,12 +78,15 @@ public class SourceType
     protected DateTime Created;
 }
 
-" + $"[{_attributeName}(typeof(SourceType){_additionCtorArgs}, MemberDeclarationFormat = \"{format}\"))]\n" +
+" + $"[{_attributeName}(typeof(SourceType){_additionCtorArgs}," +
+$"MemberDeclarationFormat = \"{format}\"," +
+$"MemberKindSelection = MemberKindFlags.AnyProperty | MemberKindFlags.WritableField," +
+$"MemberAccessibilitySelection = MemberAccessibilityFlags.Any))]\n" +
 "public partial class TargetType{}";
             return Verify(source, format);
         }
 
-        [Fact] //TODO: Theory
+        [Fact]
         public Task ShouldIncludeBaseField()
         {
             // The source code to test
@@ -114,6 +119,40 @@ public class SourceType : BaseType
 @"public partial class Include {}";
 
             return Verify(source);
+        }
+
+        [Theory]
+        [InlineData("Public")]
+        [InlineData("Protected")]
+        [InlineData("Private")]
+        [InlineData("Public", "Protected")]
+        [InlineData("Public", "Private")]
+        [InlineData("Protected", "Private")]
+        [InlineData("Public", "Protected", "Private")]
+        [InlineData("Any")]
+        public Task ShouldHandleSelectedAccessibility(params string[] accessibilites)
+        {
+            var argValue = string.Join(" | ", accessibilites.Select(x => "MemberAccessibilityFlags." + x));
+            // The source code to test
+            var source = @"
+using System;
+using TypeUtilities;
+using TypeUtilities.Abstractions;
+
+namespace MapTests;
+
+public class SourceType
+{
+    public string PublicProp { get; set; }
+    protected string ProtectedProp { get; set; }
+    private string PrivateProp { get; set; }
+}
+
+" + $"[{_attributeName}(typeof(SourceType){_additionCtorArgs}, MemberAccessibilitySelection = {argValue})]\n" +
+    @"public partial class TargetType {}";
+
+            var accessibility = string.Join(',', accessibilites);
+            return Verify(source, accessibility);
         }
 
         private Task Verify(string source)
