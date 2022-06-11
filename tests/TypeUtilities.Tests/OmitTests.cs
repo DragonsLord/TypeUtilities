@@ -15,7 +15,7 @@ public class OmitGeneratorTests
     public class MapSuite : MapTestSuite<OmitAttribute>
     {
         public MapSuite(CompilationFixture compilationFixture)
-            : base(compilationFixture, "Omit", ", \"Value\", \"Score\"")
+            : base(compilationFixture, "Omit")
         {
 
         }

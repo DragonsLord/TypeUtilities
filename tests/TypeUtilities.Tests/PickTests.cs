@@ -17,7 +17,7 @@ public class PickGeneratorTests
     {
         public MapSuite(CompilationFixture compilationFixture)
             // TODO: make some context class to improve and simplify suite setup
-            : base(compilationFixture, "Pick", ", \"Id\", \"Created\", \"Score\", \"PublicProp\", \"ProtectedProp\", \"PrivateProp\"")
+            : base(compilationFixture, "Pick", ", \"Id\", \"Value\", \"Created\", \"StaticProp\", \"publicField\", \"_privateField\", \"readonlyField\", \"BaseCount\", \"BaseScore\"")
         {
 
         }
