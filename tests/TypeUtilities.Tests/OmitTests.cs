@@ -1,5 +1,4 @@
-﻿using System.Threading.Tasks;
-using TypeUtilities.Tests.Fixture;
+﻿using TypeUtilities.Tests.Fixture;
 using TypeUtilities.Tests.Suites;
 using VerifyXunit;
 using Xunit;
@@ -40,7 +39,7 @@ public class OmitGeneratorTests
     }
 
     [Fact]
-    public Task ShouldAddNotSpecifiedField()
+    public void ShouldAddNotSpecifiedField()
     {
         // The source code to test
         var source = @"
@@ -62,12 +61,22 @@ public partial class TargetType
     public double AdditionalValue { get; set; }
 }
 ";
-        return Verify(source);
+        var result = _fixture.Generate(source);
+
+        result
+            .ShouldHaveSingleSource("TargetType.omit.SourceType.g.cs", @"
+namespace OmitTests;
+
+public partial class TargetType
+{
+	public System.Guid Id { get; set; }
+	public System.DateTime Created { get; set; }
+}");
     }
 
     #region SyntaxErrors
     [Fact]
-    public Task ShouldHandleFieldsSyntaxErors()
+    public void ShouldHandleFieldsSyntaxErors()
     {
         var source = @"
 using TypeUtilities;
@@ -87,11 +96,20 @@ public partial class TargetType
 }
 ";
 
-        return Verify(source);
+        var result = _fixture.Generate(source);
+
+        result
+            .ShouldHaveSingleSource("TargetType.omit.SourceType.g.cs", @"
+namespace OmitTests;
+
+public partial class TargetType
+{
+	public int Value { get; set; }
+}");
     }
 
     [Fact]
-    public Task ShouldHandleSourceTypeSyntaxErors()
+    public void ShouldHandleSourceTypeSyntaxErors()
     {
         var source = @"
 using TypeUtilities;
@@ -117,11 +135,16 @@ public partial class TargetType2
 }
 ";
 
-        return Verify(source);
+        var result = _fixture.Generate(source);
+
+        result
+            .ShouldHaveSingleSource("TargetType1.omit.SourceTy.g.cs", @"
+namespace OmitTests;
+public partial class TargetType1 { }");
     }
 
-    [Fact] //TODO: Theory
-    public Task ShouldHandleIncludeBaseSyntaxErrors()
+    [Fact]
+    public void ShouldHandleIncludeBaseSyntaxErrors()
     {
         // The source code to test
         var source = @"
@@ -149,12 +172,28 @@ public partial class ValueError {}
 public partial class NameError {}
 ";
 
-        return Verify(source);
+        var result = _fixture.Generate(source);
+
+        result
+            .ShouldHaveSourcesCount(2)
+            .ShouldHaveSource("NameError.omit.SourceType.g.cs", @"
+namespace OmitTests;
+
+public partial class NameError
+{
+	public System.Guid Id { get; set; }
+	public System.DateTime Created { get; set; }
+}
+")
+            .ShouldHaveSource("ValueError.omit.SourceType.g.cs", @"
+namespace OmitTests;
+
+public partial class ValueError
+{
+	public System.Guid Id { get; set; }
+	public System.DateTime Created { get; set; }
+}
+");
     }
     #endregion
-
-    private Task Verify(string source)
-    {
-        return _fixture.Verify(source, "Omit/Specific");
-    }
 }
