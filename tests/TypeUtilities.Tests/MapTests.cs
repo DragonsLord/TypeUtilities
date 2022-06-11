@@ -1,16 +1,12 @@
-﻿using System.Threading.Tasks;
-using TypeUtilities.Tests.Fixture;
+﻿using TypeUtilities.Tests.Fixture;
 using TypeUtilities.Tests.Suites;
-using VerifyXunit;
 using Xunit;
 
 namespace TypeUtilities.Tests;
 
-[UsesVerify]
 [Collection("Compilation Collection")]
 public class MapGeneratorTests
 {
-    [UsesVerify]
     [Collection("Compilation Collection")]
     public class MapSuite : MapTestSuite<MapAttribute>
     {
@@ -21,7 +17,6 @@ public class MapGeneratorTests
         }
     }
 
-    [UsesVerify]
     [Collection("Compilation Collection")]
     public class DiagnosticsSuite : DiagnosticsTestSuite<MapAttribute>
     {
@@ -39,11 +34,10 @@ public class MapGeneratorTests
         _fixture = compilationFixture;
     }
 
-
     #region SyntaxErrors
 
     [Fact]
-    public Task ShouldHandleSourceTypeSyntaxErors()
+    public void ShouldHandleSourceTypeSyntaxErors()
     {
         var source = @"
 using TypeUtilities;
@@ -69,11 +63,16 @@ public partial class TargetType2
 }
 ";
 
-        return Verify(source);
+        var result = _fixture.Generate(source);
+
+        result
+            .ShouldHaveSingleSource("TargetType1.map.SourceTy.g.cs", @"
+namespace MapTests;
+public partial class TargetType1 { }");
     }
 
     [Fact] //TODO: Theory
-    public Task ShouldHandleIncludeBaseSyntaxErrors()
+    public void ShouldHandleIncludeBaseSyntaxErrors()
     {
         // The source code to test
         var source = @"
@@ -101,12 +100,28 @@ public partial class ValueError {}
 public partial class NameError {}
 ";
 
-        return Verify(source);
+        var result = _fixture.Generate(source);
+
+        result
+            .ShouldHaveSourcesCount(2)
+            .ShouldHaveSource("NameError.map.SourceType.g.cs", @"
+namespace MapTests;
+
+public partial class NameError
+{
+	public System.Guid Id { get; set; }
+	public int Value { get; set; }
+	public System.DateTime Created { get; set; }
+}")
+            .ShouldHaveSource("ValueError.map.SourceType.g.cs", @"
+namespace MapTests;
+
+public partial class ValueError
+{
+	public System.Guid Id { get; set; }
+	public int Value { get; set; }
+	public System.DateTime Created { get; set; }
+}");
     }
     #endregion
-
-    private Task Verify(string source)
-    {
-        return _fixture.Verify(source, "Map/Specific");
-    }
 }

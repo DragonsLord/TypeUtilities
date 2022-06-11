@@ -1,29 +1,23 @@
-﻿using System.Threading.Tasks;
-using TypeUtilities.Abstractions;
-using TypeUtilities.Tests.Fixture;
+﻿using TypeUtilities.Tests.Fixture;
 using TypeUtilities.Tests.Suites;
-using VerifyXunit;
 using Xunit;
 
 namespace TypeUtilities.Tests;
 
-[UsesVerify]
 [Collection("Compilation Collection")]
 public class PickGeneratorTests
 {
-    [UsesVerify]
     [Collection("Compilation Collection")]
     public class MapSuite : MapTestSuite<PickAttribute>
     {
         public MapSuite(CompilationFixture compilationFixture)
             // TODO: make some context class to improve and simplify suite setup
-            : base(compilationFixture, "Pick", ", \"Id\", \"Created\", \"Score\", \"PublicProp\", \"ProtectedProp\", \"PrivateProp\"")
+            : base(compilationFixture, "Pick", ", \"Id\", \"Value\", \"Created\", \"StaticProp\", \"publicField\", \"_privateField\", \"readonlyField\", \"BaseCount\", \"BaseScore\"")
         {
 
         }
     }
 
-    [UsesVerify]
     [Collection("Compilation Collection")]
     public class DiagnosticsSuite : DiagnosticsTestSuite<PickAttribute>
     {
@@ -42,7 +36,7 @@ public class PickGeneratorTests
     }
 
     [Fact]
-    public Task ShouldAddSpecifiedField()
+    public void ShouldAddSpecifiedField()
     {
         // The source code to test
         var source = @"
@@ -64,12 +58,22 @@ public partial class TargetType
     public double AdditionalValue { get; set; }
 }
 ";
-        return Verify(source);
+        var result = _fixture.Generate(source);
+
+        result
+            .ShouldHaveSingleSource("TargetType.pick.SourceType.g.cs", @"
+namespace PickTests;
+
+public partial class TargetType
+{
+	public System.Guid Id { get; set; }
+	public System.DateTime Created { get; set; }
+}");
     }
 
     #region SyntaxErrors
     [Fact]
-    public Task ShouldHandleFieldsSyntaxErors()
+    public void ShouldHandleFieldsSyntaxErors()
     {
         var source = @"
 using TypeUtilities;
@@ -89,11 +93,20 @@ public partial class TargetType
 }
 ";
 
-        return Verify(source);
+        var result = _fixture.Generate(source);
+
+        result
+            .ShouldHaveSingleSource("TargetType.pick.SourceType.g.cs", @"
+namespace PickTests;
+
+public partial class TargetType
+{
+	public string Id { get; set; }
+}");
     }
 
     [Fact]
-    public Task ShouldHandleSourceTypeSyntaxErors()
+    public void ShouldHandleSourceTypeSyntaxErors()
     {
         var source = @"
 using TypeUtilities;
@@ -119,11 +132,20 @@ public partial class TargetType2
 }
 ";
 
-        return Verify(source);
+    var result = _fixture.Generate(source);
+
+    result
+        .ShouldHaveSingleSource("TargetType1.pick.SourceTy.g.cs", @"
+namespace PickTests;
+
+public partial class TargetType1
+{
+}
+");
     }
 
     [Fact] //TODO: Theory
-    public Task ShouldHandleIncludeBaseSyntaxErrors()
+    public void ShouldHandleIncludeBaseSyntaxErrors()
     {
         // The source code to test
         var source = @"
@@ -151,12 +173,24 @@ public partial class ValueError {}
 public partial class NameError {}
 ";
 
-        return Verify(source);
+        var result = _fixture.Generate(source);
+
+        result
+            .ShouldHaveSourcesCount(2)
+            .ShouldHaveSource("NameError.pick.SourceType.g.cs", @"
+namespace PickTests;
+
+public partial class NameError
+{
+	public System.Guid Id { get; set; }
+}")
+            .ShouldHaveSource("ValueError.pick.SourceType.g.cs", @"
+namespace PickTests;
+
+public partial class ValueError
+{
+	public System.Guid Id { get; set; }
+}");
     }
     #endregion
-
-    private Task Verify(string source)
-    {
-        return _fixture.Verify(source, "Pick/Specific");
-    }
 }

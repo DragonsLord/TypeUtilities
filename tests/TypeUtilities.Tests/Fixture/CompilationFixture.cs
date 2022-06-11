@@ -1,20 +1,16 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using System;
-using System.Collections.Immutable;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using TypeUtilities.SourceGenerators;
-using VerifyTests;
-using VerifyXunit;
 
 namespace TypeUtilities.Tests.Fixture
 {
     public class CompilationFixture
     {
-        private CSharpCompilation _compiledDependencies;
+        private readonly CSharpCompilation _compiledDependencies;
 
         public CompilationFixture()
         {
@@ -30,14 +26,7 @@ namespace TypeUtilities.Tests.Fixture
                 references: references);
         }
 
-        public Task Verify(string source, string snapshotPath, params string[] parameters)
-        {
-            var settings = new VerifySettings();
-            settings.UseParameters(parameters);
-            return Verify(source, snapshotPath, settings);
-        }
-
-        public Task Verify(string source, string snapshotPath = "", VerifySettings? settings = null)
+        public SourceGeneratorResult Generate(string source)
         {
             var compilation = _compiledDependencies.AddSyntaxTrees(CSharpSyntaxTree.ParseText(source));
 
@@ -45,7 +34,7 @@ namespace TypeUtilities.Tests.Fixture
 
             var driver = CSharpGeneratorDriver.Create(generator).RunGenerators(compilation);
 
-            return Verifier.Verify(driver, settings).UseDirectory(Path.Combine("..", "snapshots", snapshotPath));
+            return new SourceGeneratorResult(driver.GetRunResult());
         }
     }
 }

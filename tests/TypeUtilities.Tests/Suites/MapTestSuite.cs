@@ -1,39 +1,38 @@
-﻿using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Text;
 using TypeUtilities.Abstractions;
 using TypeUtilities.Tests.Fixture;
 using Xunit;
 
-namespace TypeUtilities.Tests.Suites
+namespace TypeUtilities.Tests.Suites;
+
+public abstract class MapTestSuite<T>
+    where T : MapAttribute
 {
-    public abstract class MapTestSuite<T>
-        where T : MapAttribute
+    private readonly CompilationFixture _fixture;
+    private readonly string _attributeName;
+    private readonly string _additionCtorArgs;
+
+    public MapTestSuite(CompilationFixture compilationFixture, string attributeName, string additionCtorArgs = "")
     {
-        private readonly CompilationFixture _fixture;
-        private readonly string _attributeName;
-        private readonly string _additionCtorArgs;
+        _fixture = compilationFixture;
+        _attributeName = attributeName;
+        _additionCtorArgs = additionCtorArgs;
+    }
 
-        public MapTestSuite(CompilationFixture compilationFixture, string attributeName, string additionCtorArgs = "")
-        {
-            _fixture = compilationFixture;
-            _attributeName = attributeName;
-            _additionCtorArgs = additionCtorArgs;
-        }
-
-        [Theory]
-        [InlineData("public", "class")]
-        [InlineData("internal", "class")]
-        [InlineData("private", "class")]
-        [InlineData("public", "struct")]
-        [InlineData("internal", "struct")]
-        [InlineData("private", "struct")]
-        [InlineData("public", "record")]
-        [InlineData("internal", "record")]
-        [InlineData("private", "record")]
-        public Task ShouldAddMappedMembers(string accessibility, string typeKind)
-        {
-            // The source code to test
-            var source = @"
+    [Theory]
+    [InlineData("public", "class")]
+    [InlineData("internal", "class")]
+    [InlineData("private", "class")]
+    [InlineData("public", "struct")]
+    [InlineData("internal", "struct")]
+    [InlineData("private", "struct")]
+    [InlineData("public", "record")]
+    [InlineData("internal", "record")]
+    [InlineData("private", "record")]
+    public void ShouldAddMappedMembers(string accessibility, string typeKind)
+    {
+        var source = new StringBuilder(@"
 using System;
 using TypeUtilities;
 
@@ -42,29 +41,104 @@ namespace MapTests;
 public class SourceType
 {
     public Guid Id { get; set; }
-    public int Value { get; set; }
-    public DateTime Created { get; set; }
+    public int Value { get; }
+    public DateTime Created { set; }
 }
+")
+            .AppendLine($"[{_attributeName}(typeof(SourceType){_additionCtorArgs})]")
+            .AppendLine($"{accessibility} partial {typeKind} TargetType")
+            .AppendLine("{ public double AdditionalValue { get; set; } }")
+            .ToString();
 
-" + $"[{_attributeName}(typeof(SourceType){_additionCtorArgs})]\n" +
-$"{accessibility} partial {typeKind} TargetType" +
-@"{
-    public double AdditionalValue { get; set; }
-}
-";
-            return Verify(source, accessibility, typeKind);
-        }
+        var result = _fixture.Generate(source);
 
-        [Theory]
-        [InlineData(MemberDeclarationFormats.Source)]
-        [InlineData(MemberDeclarationFormats.PublicGetSetProp)]
-        [InlineData(MemberDeclarationFormats.Field)]
-        [InlineData(MemberDeclarationFormats.GetProp)]
-        [InlineData("{accessibility} {type} Mapped{name} { get; set; }")]
-        public Task ShouldUseMemberFormat(string format)
+        var expected = new StringBuilder()
+            .AppendLine("namespace MapTests;")
+            .AppendLine($"{accessibility} partial {typeKind} TargetType")
+            .AppendLine("{")
+            .AppendLine("\tpublic System.Guid Id { get; set; }")
+            .AppendLine("\tpublic int Value { get; }")
+            .AppendLine("\tpublic System.DateTime Created { set; }")
+            .AppendLine("}\n");
+
+        result
+            .ShouldNotHaveDiagnostics()
+            .ShouldHaveSingleSource($"TargetType.{_attributeName.ToLower()}.SourceType.g.cs", expected.ToString());
+    }
+
+    public static object[] MemberFormatData = new[] {
+        new object[]
         {
-            // The source code to test
-            var source = @"
+            MemberDeclarationFormats.Source,
+            new string[] {
+                "public System.Guid Id { get; }",
+                "protected int Value { get; set; }",
+                "private System.DateTime Created { set; }",
+                "public string StaticProp { get; set; }", //TODO: add static support
+                "public double publicField;",
+                "private int _privateField;",
+                "public int readonlyField;" //TODO: add readonly field support
+            }
+        },
+        new object[]
+        {
+            MemberDeclarationFormats.PublicGetSetProp,
+            new string[] {
+                "public System.Guid Id { get; set; }",
+                "public int Value { get; set; }",
+                "public System.DateTime Created { get; set; }",
+                "public string StaticProp { get; set; }",
+                "public double publicField { get; set; }",
+                "public int _privateField { get; set; }",
+                "public int readonlyField { get; set; }"
+            }
+        },
+        new object[]
+        {
+            MemberDeclarationFormats.Field,
+            new string[] {
+                "public System.Guid Id;",
+                "protected int Value;",
+                "private System.DateTime Created;",
+                "public string StaticProp;",
+                "public double publicField;",
+                "private int _privateField;",
+                "public int readonlyField;"
+            }
+        },
+        new object[]
+        {
+            MemberDeclarationFormats.GetProp,
+            new string[] {
+                "public System.Guid Id { get; }",
+                "protected int Value { get; }",
+                "private System.DateTime Created { get; }",
+                "public string StaticProp { get; }",
+                "public double publicField { get; }",
+                "private int _privateField { get; }",
+                "public int readonlyField { get; }"
+            }
+        },
+        new object[]
+        {
+            "{accessibility} {type} Mapped{name} { get; set; }",
+            new string[] {
+                "public System.Guid MappedId { get; set; }",
+                "protected int MappedValue { get; set; }",
+                "private System.DateTime MappedCreated { get; set; }",
+                "public string MappedStaticProp { get; set; }",
+                "public double MappedpublicField { get; set; }",
+                "private int Mapped_privateField { get; set; }",
+                "public int MappedreadonlyField { get; set; }"
+            }
+        }
+    };
+
+    [Theory]
+    [MemberData(nameof(MemberFormatData))]
+    public void ShouldUseMemberFormat(string format, IEnumerable<string> expectedProps)
+    {
+        var source = new StringBuilder(@"
 using System;
 using TypeUtilities;
 using TypeUtilities.Abstractions;
@@ -74,67 +148,179 @@ namespace MapTests;
 public class SourceType
 {
     public Guid Id { get; }
-    public int Value { get; set; }
-    protected DateTime Created;
+    protected int Value { get; set; }
+    private DateTime Created { set; }
+    public static string StaticProp { get; set; }
+    public double publicField;
+    private int _privateField;
+    public readonly int readonlyField;
 }
+")
+            .AppendLine($"[{_attributeName}(typeof(SourceType){_additionCtorArgs},")
+            .AppendLine($"MemberDeclarationFormat = \"{format}\",")
+            .AppendLine($"MemberScopeSelection = MemberScopeFlags.Any,")
+            .AppendLine($"MemberKindSelection = MemberKindFlags.AnyProperty | MemberKindFlags.WritableField,")
+            .AppendLine($"MemberAccessibilitySelection = MemberAccessibilityFlags.Any))]")
+            .AppendLine("public partial class TargetType {}")
+            .ToString();
 
-" + $"[{_attributeName}(typeof(SourceType){_additionCtorArgs}," +
-$"MemberDeclarationFormat = \"{format}\"," +
-$"MemberKindSelection = MemberKindFlags.AnyProperty | MemberKindFlags.WritableField," +
-$"MemberAccessibilitySelection = MemberAccessibilityFlags.Any))]\n" +
-"public partial class TargetType{}";
-            return Verify(source, format);
-        }
+        var result = _fixture.Generate(source);
 
-        [Fact]
-        public Task ShouldIncludeBaseField()
+        var expected = new StringBuilder()
+            .AppendLine("namespace MapTests;")
+            .AppendLine("public partial class TargetType")
+            .AppendLine("{");
+
+        foreach (var prop in expectedProps)
         {
-            // The source code to test
-            var source = @"
+            expected.AppendLine($"\t{prop}");
+        }
+        expected.AppendLine("}\n");
+
+        result
+            .ShouldNotHaveDiagnostics()
+            .ShouldHaveSingleSource($"TargetType.{_attributeName.ToLower()}.SourceType.g.cs", expected.ToString());
+    }
+
+    [Fact]
+    public void ShouldIncludeBaseField()
+    {
+        // The source code to test
+        var source = new StringBuilder(@"
 using System;
 using TypeUtilities;
+using TypeUtilities.Abstractions;
 
 namespace MapTests;
 
 public class BaseType
 {
-    public int Count { get; }
-    public double Score { get; }
+    public int BaseCount { get; }
+    public double BaseScore { get; }
 }
 
 public class SourceType : BaseType
 {
-    public Guid Id { get; set; }
+    public Guid Id { get; }
     public int Value { get; set; }
-    public DateTime Created { get; set; }
+    public DateTime Created { set; }
 }
+")
+            .AppendLine($"[{_attributeName}(typeof(SourceType){_additionCtorArgs})]")
+            .AppendLine("public partial class DoNotIncludeByDefault {}")
+            .AppendLine($"[{_attributeName}(typeof(SourceType){_additionCtorArgs}, IncludeBaseTypes = false)]")
+            .AppendLine("public partial class DoNotIncludeExplicitly {}")
+            .AppendLine($"[{_attributeName}(typeof(SourceType){_additionCtorArgs}, IncludeBaseTypes = true)]")
+            .AppendLine("public partial class Include {}")
+            .ToString();
 
-" + $"[{_attributeName}(typeof(SourceType){_additionCtorArgs})]\n" +
-@"public partial class DoNotIncludeByDefault {}
+        var result = _fixture.Generate(source);
 
-" + $"[{_attributeName}(typeof(SourceType){_additionCtorArgs}, IncludeBaseTypes = false)]\n" +
-@"public partial class DoNotIncludeExplicitly {}
+        result
+            .ShouldNotHaveDiagnostics()
+            .ShouldHaveSourcesCount(3)
+            .ShouldHaveSource($"DoNotIncludeByDefault.{_attributeName.ToLower()}.SourceType.g.cs", @"
+namespace MapTests;
 
-" + $"[{_attributeName}(typeof(SourceType){_additionCtorArgs}, IncludeBaseTypes = true)]\n" +
-@"public partial class Include {}";
+public partial class DoNotIncludeByDefault
+{
+	public System.Guid Id { get; }
+	public int Value { get; set; }
+	public System.DateTime Created { set; }
+}")
+            .ShouldHaveSource($"DoNotIncludeExplicitly.{_attributeName.ToLower()}.SourceType.g.cs", @"
+namespace MapTests;
 
-            return Verify(source);
-        }
+public partial class DoNotIncludeExplicitly
+{
+	public System.Guid Id { get; }
+	public int Value { get; set; }
+	public System.DateTime Created {  set; }
+}")
+                            .ShouldHaveSource($"Include.{_attributeName.ToLower()}.SourceType.g.cs", @"
+namespace MapTests;
 
-        [Theory]
-        [InlineData("Public")]
-        [InlineData("Protected")]
-        [InlineData("Private")]
-        [InlineData("Public", "Protected")]
-        [InlineData("Public", "Private")]
-        [InlineData("Protected", "Private")]
-        [InlineData("Public", "Protected", "Private")]
-        [InlineData("Any")]
-        public Task ShouldHandleSelectedAccessibility(params string[] accessibilites)
+public partial class Include
+{
+	public System.Guid Id { get; }
+	public int Value { get; set; }
+	public System.DateTime Created { set; }
+	public int BaseCount { get; }
+	public double BaseScore { get; }
+}");
+    }
+
+    public static object[] MemberAccessibilityData = new[] {
+        new object[]
         {
-            var argValue = string.Join(" | ", accessibilites.Select(x => "MemberAccessibilityFlags." + x));
-            // The source code to test
-            var source = @"
+            "MemberAccessibilityFlags.Public",
+            new string[] {
+                "public string Id { get; }"
+            }
+        },
+        new object[]
+        {
+            "MemberAccessibilityFlags.Protected",
+            new string[] {
+                "protected string Value { get; }"
+            }
+        },
+        new object[]
+        {
+            "MemberAccessibilityFlags.Private",
+            new string[] {
+                "private string Created { get; }"
+            }
+        },
+        new object[]
+        {
+            "MemberAccessibilityFlags.Public | MemberAccessibilityFlags.Protected",
+            new string[] {
+                "public string Id { get; }",
+                "protected string Value { get; }"
+            }
+        },
+        new object[]
+        {
+            "MemberAccessibilityFlags.Public | MemberAccessibilityFlags.Private",
+            new string[] {
+                "public string Id { get; }",
+                "private string Created { get; }"
+            }
+        },
+        new object[]
+        {
+            "MemberAccessibilityFlags.Protected | MemberAccessibilityFlags.Private",
+            new string[] {
+                "protected string Value { get; }",
+                "private string Created { get; }"
+            }
+        },
+        new object[]
+        {
+            "MemberAccessibilityFlags.Public | MemberAccessibilityFlags.Protected | MemberAccessibilityFlags.Private",
+            new string[] {
+                "public string Id { get; }",
+                "protected string Value { get; }",
+                "private string Created { get; }"
+            }
+        },
+        new object[]
+        {
+            "MemberAccessibilityFlags.Any",
+            new string[] {
+                "public string Id { get; }",
+                "protected string Value { get; }",
+                "private string Created { get; }"
+            }
+        }
+    };
+
+    [Theory]
+    [MemberData(nameof(MemberAccessibilityData))]
+    public void ShouldHandleSelectedAccessibility(string accessibilites, string[] expectedProps)
+    {
+        var source = new StringBuilder(@"
 using System;
 using TypeUtilities;
 using TypeUtilities.Abstractions;
@@ -143,26 +329,30 @@ namespace MapTests;
 
 public class SourceType
 {
-    public string PublicProp { get; set; }
-    protected string ProtectedProp { get; set; }
-    private string PrivateProp { get; set; }
+    public string Id { get; }
+    protected string Value { get; }
+    private string Created { get; }
 }
+")
+            .AppendLine($"[{_attributeName}(typeof(SourceType){_additionCtorArgs}, MemberAccessibilitySelection = {accessibilites})]")
+            .AppendLine("public partial class TargetType {}")
+            .ToString();
 
-" + $"[{_attributeName}(typeof(SourceType){_additionCtorArgs}, MemberAccessibilitySelection = {argValue})]\n" +
-    @"public partial class TargetType {}";
+        var result = _fixture.Generate(source);
 
-            var accessibility = string.Join(',', accessibilites);
-            return Verify(source, accessibility);
-        }
+        var expected = new StringBuilder()
+            .AppendLine("namespace MapTests;")
+            .AppendLine("public partial class TargetType")
+            .AppendLine("{");
 
-        private Task Verify(string source)
+        foreach (var prop in expectedProps)
         {
-            return _fixture.Verify(source, $"{_attributeName}/MapSuite");
+            expected.AppendLine($"\t{prop}");
         }
+        expected.AppendLine("}\n");
 
-        private Task Verify(string source, params string[] parameters)
-        {
-            return _fixture.Verify(source, $"{_attributeName}/MapSuite", parameters);
-        }
+        result
+            .ShouldNotHaveDiagnostics()
+            .ShouldHaveSingleSource($"TargetType.{_attributeName.ToLower()}.SourceType.g.cs", expected.ToString());
     }
 }

@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Microsoft.CodeAnalysis;
+using System;
 using TypeUtilities.Tests.Fixture;
 using Xunit;
 
@@ -21,7 +18,7 @@ namespace TypeUtilities.Tests.Suites
         }
 
         [Fact]
-        public Task ShouldRequirePartialModifier()
+        public void ShouldRequirePartialModifier()
         {
             // The source code to test
             var source = @"
@@ -43,12 +40,12 @@ public class SourceType
 }
 ";
 
-            return Verify(source);
-        }
+            var result = _fixture.Generate(source);
 
-        private Task Verify(string source)
-        {
-            return _fixture.Verify(source, $"{_attributeName}/DiagnosticsSuite");
+            result
+                .ShouldNotHaveSources()
+                // TODO: extract diagnostics id into contstants
+                .ShouldHaveSingleDiagnostic("TU001", DiagnosticSeverity.Error, "TargetType should have partial modifier");
         }
     }
 }
