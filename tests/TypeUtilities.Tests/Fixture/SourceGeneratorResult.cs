@@ -19,9 +19,12 @@ namespace TypeUtilities.Tests.Fixture
 
         public SourceGeneratorResult ShouldHaveSourcesCount(int count)
         {
-            Assert.True(count == GeneratedSources.Count, $"Should have {count} generated source, but acualy have {GeneratedSources.Count}");
+            Assert.True(count == GeneratedSources.Count, $"Should have {count} generated source, but actualy have {GeneratedSources.Count}");
             return this;
         }
+
+        public SourceGeneratorResult ShouldNotHaveSources()
+            => ShouldHaveSourcesCount(0);
 
         public SourceGeneratorResult ShouldHaveSource(string name, string expectedSourceText)
         {
@@ -37,6 +40,32 @@ namespace TypeUtilities.Tests.Fixture
         public SourceGeneratorResult ShouldHaveSingleSource(string name, string expectedSourceText)
         {
             return ShouldHaveSourcesCount(1).ShouldHaveSource(name, expectedSourceText);
+        }
+
+        public SourceGeneratorResult ShouldHaveDiagnosticsCount(int count)
+        {
+            Assert.True(count == Diagnostics.Count, $"Should have {count} diagnostics, but actualy have {Diagnostics.Count}");
+            return this;
+        }
+
+        public SourceGeneratorResult ShouldNotHaveDiagnostics()
+            => ShouldHaveDiagnosticsCount(0);
+
+        public SourceGeneratorResult ShouldHaveDiagnostic(string id, DiagnosticSeverity severity, string message)
+        {
+            Assert.True(Diagnostics.ContainsKey(id), $"The diagnostics with id {id} is missing");
+
+            var diagnostic = Diagnostics[id];
+
+            Assert.Equal(severity, diagnostic.Severity);
+            Assert.Equal(message, diagnostic.GetMessage());
+
+            return this;
+        }
+
+        public SourceGeneratorResult ShouldHaveSingleDiagnostic(string id, DiagnosticSeverity severity, string message)
+        {
+            return ShouldHaveDiagnosticsCount(1).ShouldHaveDiagnostic(id, severity, message);
         }
 
         private string NormilizeSource(string source)

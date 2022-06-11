@@ -61,7 +61,9 @@ public class SourceType
             .AppendLine("\tpublic System.DateTime Created { set; }")
             .AppendLine("}\n");
 
-        result.ShouldHaveSingleSource($"TargetType.{_attributeName.ToLower()}.SourceType.g.cs", expected.ToString());
+        result
+            .ShouldNotHaveDiagnostics()
+            .ShouldHaveSingleSource($"TargetType.{_attributeName.ToLower()}.SourceType.g.cs", expected.ToString());
     }
 
     public static object[] MemberFormatData = new[] {
@@ -175,7 +177,9 @@ public class SourceType
         }
         expected.AppendLine("}\n");
 
-        result.ShouldHaveSingleSource($"TargetType.{_attributeName.ToLower()}.SourceType.g.cs", expected.ToString());
+        result
+            .ShouldNotHaveDiagnostics()
+            .ShouldHaveSingleSource($"TargetType.{_attributeName.ToLower()}.SourceType.g.cs", expected.ToString());
     }
 
     [Fact]
@@ -213,6 +217,7 @@ public class SourceType : BaseType
         var result = _fixture.Generate(source);
 
         result
+            .ShouldNotHaveDiagnostics()
             .ShouldHaveSourcesCount(3)
             .ShouldHaveSource($"DoNotIncludeByDefault.{_attributeName.ToLower()}.SourceType.g.cs", @"
 namespace MapTests;
@@ -346,6 +351,8 @@ public class SourceType
         }
         expected.AppendLine("}\n");
 
-        result.ShouldHaveSingleSource($"TargetType.{_attributeName.ToLower()}.SourceType.g.cs", expected.ToString());
+        result
+            .ShouldNotHaveDiagnostics()
+            .ShouldHaveSingleSource($"TargetType.{_attributeName.ToLower()}.SourceType.g.cs", expected.ToString());
     }
 }
