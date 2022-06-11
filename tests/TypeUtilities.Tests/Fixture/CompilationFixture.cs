@@ -1,8 +1,6 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using System;
-using System.Collections.Immutable;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -46,6 +44,17 @@ namespace TypeUtilities.Tests.Fixture
             var driver = CSharpGeneratorDriver.Create(generator).RunGenerators(compilation);
 
             return Verifier.Verify(driver, settings).UseDirectory(Path.Combine("..", "snapshots", snapshotPath));
+        }
+
+        public SourceGeneratorResult Generate(string source)
+        {
+            var compilation = _compiledDependencies.AddSyntaxTrees(CSharpSyntaxTree.ParseText(source));
+
+            var generator = new TypeUtilitiesSourceGenerator();
+
+            var driver = CSharpGeneratorDriver.Create(generator).RunGenerators(compilation);
+
+            return new SourceGeneratorResult(driver.GetRunResult());
         }
     }
 }
