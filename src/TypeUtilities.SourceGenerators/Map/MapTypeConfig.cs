@@ -38,7 +38,7 @@ public static class MemberSelectionExtensions
         return members.Where(x => x.IsStatic == isStatic);
     }
 
-    public static IEnumerable<ISymbol> FilterKind(this IEnumerable<ISymbol> members, MemberKindFlags scopeFlags)
+    public static IEnumerable<ISymbol> FilterKind(this IEnumerable<ISymbol> members, MemberKindFlags kindFlags)
     {
         var filterProperty = GetPropertyFilter();
         var filterField = GetFieldFilter();
@@ -46,22 +46,22 @@ public static class MemberSelectionExtensions
 
         Func<ISymbol, bool> GetPropertyFilter()
         {
-            if (scopeFlags.HasFlag(MemberKindFlags.AnyProperty))
+            if (kindFlags.HasFlag(MemberKindFlags.AnyProperty))
                 return x => x is IPropertySymbol;
 
-            if (scopeFlags.HasFlag(MemberKindFlags.GetProperty))
+            if (kindFlags.HasFlag(MemberKindFlags.GetProperty))
                 return x => x is IPropertySymbol propertySymbol && propertySymbol.GetMethod is not null;
 
-            if (scopeFlags.HasFlag(MemberKindFlags.SetProperty))
+            if (kindFlags.HasFlag(MemberKindFlags.SetProperty))
                 return x => x is IPropertySymbol propertySymbol && propertySymbol.SetMethod is not null;
 
-            if (scopeFlags.HasFlag(MemberKindFlags.ReadonlyProperty))
+            if (kindFlags.HasFlag(MemberKindFlags.ReadonlyProperty))
                 return x => x is IPropertySymbol propertySymbol && propertySymbol.GetMethod is not null && propertySymbol.SetMethod is null;
 
-            if (scopeFlags.HasFlag(MemberKindFlags.WriteonlyProperty))
+            if (kindFlags.HasFlag(MemberKindFlags.WriteonlyProperty))
                 return x => x is IPropertySymbol propertySymbol && propertySymbol.SetMethod is not null && propertySymbol.GetMethod is null;
 
-            if (scopeFlags.HasFlag(MemberKindFlags.GetSetProperty))
+            if (kindFlags.HasFlag(MemberKindFlags.GetSetProperty))
                 return x => x is IPropertySymbol propertySymbol && propertySymbol.GetMethod is not null && propertySymbol.SetMethod is not null;
 
             return x => false;
@@ -69,15 +69,14 @@ public static class MemberSelectionExtensions
 
         Func<ISymbol, bool> GetFieldFilter()
         {
-            if (scopeFlags.HasFlag(MemberKindFlags.WritableField))
-            {
+            if (kindFlags.HasFlag(MemberKindFlags.AnyField))
                 return x => x is IFieldSymbol;
-            }
 
-            if (scopeFlags.HasFlag(MemberKindFlags.ReadonlyField))
-            {
+            if (kindFlags.HasFlag(MemberKindFlags.WritableField))
+                return x => x is IFieldSymbol field && !field.IsReadOnly;
+
+            if (kindFlags.HasFlag(MemberKindFlags.ReadonlyField))
                 return x => x is IFieldSymbol field && field.IsReadOnly;
-            }
 
             return x => false;
         }

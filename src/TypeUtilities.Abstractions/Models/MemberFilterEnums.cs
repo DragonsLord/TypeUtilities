@@ -81,5 +81,10 @@
         /// Include readonly fields
         /// </summary>
         ReadonlyField = 1 << 4,
+
+        /// <summary>
+        /// Include writable and readolny fields
+        /// </summary>
+        AnyField = WritableField | ReadonlyField
     }
 }

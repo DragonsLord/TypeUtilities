@@ -159,7 +159,7 @@ public class SourceType
             .AppendLine($"[{_attributeName}(typeof(SourceType){_additionCtorArgs},")
             .AppendLine($"MemberDeclarationFormat = \"{format}\",")
             .AppendLine($"MemberScopeSelection = MemberScopeFlags.Any,")
-            .AppendLine($"MemberKindSelection = MemberKindFlags.AnyProperty | MemberKindFlags.WritableField,")
+            .AppendLine($"MemberKindSelection = MemberKindFlags.AnyProperty | MemberKindFlags.AnyField,")
             .AppendLine($"MemberAccessibilitySelection = MemberAccessibilityFlags.Any))]")
             .AppendLine("public partial class TargetType {}")
             .ToString();
@@ -335,6 +335,210 @@ public class SourceType
 }
 ")
             .AppendLine($"[{_attributeName}(typeof(SourceType){_additionCtorArgs}, MemberAccessibilitySelection = {accessibilites})]")
+            .AppendLine("public partial class TargetType {}")
+            .ToString();
+
+        var result = _fixture.Generate(source);
+
+        var expected = new StringBuilder()
+            .AppendLine("namespace MapTests;")
+            .AppendLine("public partial class TargetType")
+            .AppendLine("{");
+
+        foreach (var prop in expectedProps)
+        {
+            expected.AppendLine($"\t{prop}");
+        }
+        expected.AppendLine("}\n");
+
+        result
+            .ShouldNotHaveDiagnostics()
+            .ShouldHaveSingleSource($"TargetType.{_attributeName.ToLower()}.SourceType.g.cs", expected.ToString());
+    }
+
+    public static object[] MemberScopeData = new[] {
+        new object[]
+        {
+            "MemberScopeFlags.Instance",
+            new string[] {
+                "public int Id { get; set; }"
+            }
+        },
+        new object[]
+        {
+            "MemberScopeFlags.Static",
+            new string[] {
+                "public string StaticProp { get; set; }"
+            }
+        },
+        new object[]
+        {
+            "MemberScopeFlags.Instance | MemberScopeFlags.Static",
+            new string[] {
+                "public int Id { get; set; }",
+                "public string StaticProp { get; set; }"
+            }
+        },
+        new object[]
+        {
+            "MemberScopeFlags.Any",
+            new string[] {
+                "public int Id { get; set; }",
+                "public string StaticProp { get; set; }"
+            }
+        }
+    };
+
+    [Theory]
+    [MemberData(nameof(MemberScopeData))]
+    public void ShouldHandleSelectedScope(string scopes, string[] expectedProps)
+    {
+        var source = new StringBuilder(@"
+using System;
+using TypeUtilities;
+using TypeUtilities.Abstractions;
+
+namespace MapTests;
+
+public class SourceType
+{
+    public int Id { get; set; }
+    public static string StaticProp { get; set; }
+}
+")
+            .AppendLine($"[{_attributeName}(typeof(SourceType){_additionCtorArgs}, MemberScopeSelection = {scopes})]")
+            .AppendLine("public partial class TargetType {}")
+            .ToString();
+
+        var result = _fixture.Generate(source);
+
+        var expected = new StringBuilder()
+            .AppendLine("namespace MapTests;")
+            .AppendLine("public partial class TargetType")
+            .AppendLine("{");
+
+        foreach (var prop in expectedProps)
+        {
+            expected.AppendLine($"\t{prop}");
+        }
+        expected.AppendLine("}\n");
+
+        result
+            .ShouldNotHaveDiagnostics()
+            .ShouldHaveSingleSource($"TargetType.{_attributeName.ToLower()}.SourceType.g.cs", expected.ToString());
+    }
+
+    public static object[] MemberKindData = new[] {
+        new object[]
+        {
+            "MemberKindFlags.ReadonlyProperty",
+            new string[] {
+                "public int Id { get; }"
+            }
+        },
+        new object[]
+        {
+            "MemberKindFlags.WriteonlyProperty",
+            new string[] {
+                "public string Created { set; }"
+            }
+        },
+        new object[]
+        {
+            "MemberKindFlags.GetSetProperty",
+            new string[] {
+                "public int Value { get; set; }"
+            }
+        },
+        new object[]
+        {
+            "MemberKindFlags.GetProperty",
+            new string[] {
+                "public int Id { get; }",
+                "public int Value { get; set; }"
+            }
+        },
+        new object[]
+        {
+            "MemberKindFlags.SetProperty",
+            new string[] {
+                "public int Value { get; set; }",
+                "public string Created { set; }"
+            }
+        },
+        new object[]
+        {
+            "MemberKindFlags.AnyProperty",
+            new string[] {
+                "public int Id { get; }",
+                "public int Value { get; set; }",
+                "public string Created { set; }"
+            }
+        },
+        new object[]
+        {
+            "MemberKindFlags.WritableField",
+            new string[] {
+                "public double publicField;",
+            }
+        },
+        new object[]
+        {
+            "MemberKindFlags.ReadonlyField",
+            new string[] {
+                "public int readonlyField;"
+            }
+        },
+        new object[]
+        {
+            "MemberKindFlags.AnyField",
+            new string[] {
+                "public double publicField;",
+                "public int readonlyField;"
+            }
+        },
+        new object[]
+        {
+            "MemberKindFlags.ReadonlyProperty | MemberKindFlags.ReadonlyField",
+            new string[] {
+                "public int Id { get; }",
+                "public int readonlyField;"
+            }
+        },
+        new object[]
+        {
+            "MemberKindFlags.AnyProperty | MemberKindFlags.AnyField",
+            new string[] {
+                "public int Id { get; }",
+                "public int Value { get; set; }",
+                "public string Created { set; }",
+                "public double publicField;",
+                "public int readonlyField;"
+            }
+        },
+    };
+
+    [Theory]
+    [MemberData(nameof(MemberKindData))]
+    public void ShouldHandleSelectedKind(string kind, string[] expectedProps)
+    {
+        var source = new StringBuilder(@"
+using System;
+using TypeUtilities;
+using TypeUtilities.Abstractions;
+
+namespace MapTests;
+
+public class SourceType
+{
+    public int Id { get; }
+    public int Value { get; set; }
+    public string Created { set; }
+    public double publicField;
+    public readonly int readonlyField;
+}
+")
+            .AppendLine($"[{_attributeName}(typeof(SourceType){_additionCtorArgs}, MemberKindSelection = {kind})]")
             .AppendLine("public partial class TargetType {}")
             .ToString();
 
