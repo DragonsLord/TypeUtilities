@@ -1,15 +1,12 @@
 ﻿using TypeUtilities.Tests.Fixture;
 using TypeUtilities.Tests.Suites;
-using VerifyXunit;
 using Xunit;
 
 namespace TypeUtilities.Tests;
 
-[UsesVerify]
 [Collection("Compilation Collection")]
 public class MapGeneratorTests
 {
-    [UsesVerify]
     [Collection("Compilation Collection")]
     public class MapSuite : MapTestSuite<MapAttribute>
     {
@@ -20,7 +17,6 @@ public class MapGeneratorTests
         }
     }
 
-    [UsesVerify]
     [Collection("Compilation Collection")]
     public class DiagnosticsSuite : DiagnosticsTestSuite<MapAttribute>
     {

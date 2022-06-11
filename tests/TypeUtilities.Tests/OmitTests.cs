@@ -1,15 +1,12 @@
 ﻿using TypeUtilities.Tests.Fixture;
 using TypeUtilities.Tests.Suites;
-using VerifyXunit;
 using Xunit;
 
 namespace TypeUtilities.Tests;
 
-[UsesVerify]
 [Collection("Compilation Collection")]
 public class OmitGeneratorTests
 {
-    [UsesVerify]
     [Collection("Compilation Collection")]
     public class MapSuite : MapTestSuite<OmitAttribute>
     {
@@ -20,7 +17,6 @@ public class OmitGeneratorTests
         }
     }
 
-    [UsesVerify]
     [Collection("Compilation Collection")]
     public class DiagnosticsSuite : DiagnosticsTestSuite<OmitAttribute>
     {

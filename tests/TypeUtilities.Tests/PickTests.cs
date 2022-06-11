@@ -1,17 +1,12 @@
-﻿using System.Threading.Tasks;
-using TypeUtilities.Abstractions;
-using TypeUtilities.Tests.Fixture;
+﻿using TypeUtilities.Tests.Fixture;
 using TypeUtilities.Tests.Suites;
-using VerifyXunit;
 using Xunit;
 
 namespace TypeUtilities.Tests;
 
-[UsesVerify]
 [Collection("Compilation Collection")]
 public class PickGeneratorTests
 {
-    [UsesVerify]
     [Collection("Compilation Collection")]
     public class MapSuite : MapTestSuite<PickAttribute>
     {
@@ -23,7 +18,6 @@ public class PickGeneratorTests
         }
     }
 
-    [UsesVerify]
     [Collection("Compilation Collection")]
     public class DiagnosticsSuite : DiagnosticsTestSuite<PickAttribute>
     {
