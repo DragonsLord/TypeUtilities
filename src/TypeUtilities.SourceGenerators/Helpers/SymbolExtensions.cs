@@ -32,7 +32,7 @@ namespace TypeUtilities.SourceGenerators.Helpers
             var get = symbol.GetMethod is null ? string.Empty : " get;";
             var set = symbol.SetMethod is null ? string.Empty : " set;";
 
-            return "{"+get+set+" }";
+            return "{" + get + set + " }";
         }
     }
 }

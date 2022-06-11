@@ -1,4 +1,5 @@
 ﻿using Microsoft.CodeAnalysis;
+using TypeUtilities.Abstractions;
 using TypeUtilities.SourceGenerators.Helpers;
 using TypeUtilities.SourceGenerators.Map;
 

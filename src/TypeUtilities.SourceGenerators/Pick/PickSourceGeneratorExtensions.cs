@@ -21,6 +21,8 @@ internal static class PickSourceGeneratorExtensions
             var attributeSyntax = tuple.Left.Left!;
             var compilation = tuple.Right!;
 
+            // TODO: add diagnostic to worn about fields missing in the selection
+
             context.AddMappedTypeSource("pick", attributeSyntax, compilation, PickTypeConfig.Create);
         });
 
