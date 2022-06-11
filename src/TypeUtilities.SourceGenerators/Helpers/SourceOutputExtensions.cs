@@ -9,10 +9,12 @@ namespace TypeUtilities.SourceGenerators.Helpers
 {
     internal static class SourceOutputExtensions
     {
-        private static string ApplyFormat(string format, string accessibility, string type, string name, string accessors)
+        private static string ApplyFormat(string format, string accessibility, string scope, string fieldAccess, string type, string name, string accessors)
         {
             return format
                 .Replace(Tokens.Accessibility, accessibility)
+                .Replace(Tokens.Scope, scope)
+                .Replace(Tokens.FieldAccess, fieldAccess)
                 .Replace(Tokens.Type, type)
                 .Replace(Tokens.Name, name)
                 .Replace(Tokens.Accessors, accessors);
@@ -44,6 +46,7 @@ namespace TypeUtilities.SourceGenerators.Helpers
                     continue;
 
                 var accessibility = member.DeclaredAccessibility.ToString().ToLower();
+                var scope = member.IsStatic ? " static" : string.Empty;
 
                 if (member is IPropertySymbol prop)
                 {
@@ -51,7 +54,7 @@ namespace TypeUtilities.SourceGenerators.Helpers
                     var name = prop.Name;
                     var accessors = " " + prop.GetAccessors();
 
-                    sourceBuilder.AddLine(ApplyFormat(memberDeclarationFormat, accessibility, type, name, accessors));
+                    sourceBuilder.AddLine(ApplyFormat(memberDeclarationFormat, accessibility, scope, string.Empty, type, name, accessors));
                     continue;
                 }
 
@@ -59,8 +62,9 @@ namespace TypeUtilities.SourceGenerators.Helpers
                 {
                     var type = field.Type.ToDisplayString();
                     var name = field.Name;
+                    var fieldAccess = field.IsReadOnly ? " readonly" : string.Empty;
 
-                    sourceBuilder.AddLine(ApplyFormat(memberDeclarationFormat, accessibility, type, name, ";"));
+                    sourceBuilder.AddLine(ApplyFormat(memberDeclarationFormat, accessibility, scope, fieldAccess, type, name, ";"));
                 }
             }
 

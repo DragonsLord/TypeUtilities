@@ -74,10 +74,10 @@ public class SourceType
                 "public System.Guid Id { get; }",
                 "protected int Value { get; set; }",
                 "private System.DateTime Created { set; }",
-                "public string StaticProp { get; set; }", //TODO: add static support
+                "public static string StaticProp { get; set; }",
                 "public double publicField;",
                 "private int _privateField;",
-                "public int readonlyField;" //TODO: add readonly field support
+                "public readonly int readonlyField;"
             }
         },
         new object[]
@@ -103,7 +103,7 @@ public class SourceType
                 "public string StaticProp;",
                 "public double publicField;",
                 "private int _privateField;",
-                "public int readonlyField;"
+                "public readonly int readonlyField;"
             }
         },
         new object[]
@@ -368,7 +368,7 @@ public class SourceType
         {
             "MemberScopeFlags.Static",
             new string[] {
-                "public string StaticProp { get; set; }"
+                "public static string StaticProp { get; set; }"
             }
         },
         new object[]
@@ -376,7 +376,7 @@ public class SourceType
             "MemberScopeFlags.Instance | MemberScopeFlags.Static",
             new string[] {
                 "public int Id { get; set; }",
-                "public string StaticProp { get; set; }"
+                "public static string StaticProp { get; set; }"
             }
         },
         new object[]
@@ -384,7 +384,7 @@ public class SourceType
             "MemberScopeFlags.Any",
             new string[] {
                 "public int Id { get; set; }",
-                "public string StaticProp { get; set; }"
+                "public static string StaticProp { get; set; }"
             }
         }
     };
@@ -486,7 +486,7 @@ public class SourceType
         {
             "MemberKindFlags.ReadonlyField",
             new string[] {
-                "public int readonlyField;"
+                "public readonly int readonlyField;"
             }
         },
         new object[]
@@ -494,7 +494,7 @@ public class SourceType
             "MemberKindFlags.AnyField",
             new string[] {
                 "public double publicField;",
-                "public int readonlyField;"
+                "public readonly int readonlyField;"
             }
         },
         new object[]
@@ -502,7 +502,7 @@ public class SourceType
             "MemberKindFlags.ReadonlyProperty | MemberKindFlags.ReadonlyField",
             new string[] {
                 "public int Id { get; }",
-                "public int readonlyField;"
+                "public readonly int readonlyField;"
             }
         },
         new object[]
@@ -513,7 +513,7 @@ public class SourceType
                 "public int Value { get; set; }",
                 "public string Created { set; }",
                 "public double publicField;",
-                "public int readonlyField;"
+                "public readonly int readonlyField;"
             }
         },
     };
