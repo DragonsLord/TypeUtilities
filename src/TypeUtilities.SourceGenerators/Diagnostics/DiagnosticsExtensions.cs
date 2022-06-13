@@ -33,9 +33,23 @@ namespace TypeUtilities.SourceGenerators.Diagnostics
         public static void ReportMissingPartialModifier(this SourceProductionContext ctx, TypeDeclarationSyntax syntax) =>
             ReportMissingPartialModifier(ctx, syntax.Identifier.ToString(), syntax?.Identifier.GetLocation() ?? Location.None);
 
-        public static void ReportMissingPartialModifier(this SourceProductionContext ctx, string typeName, Location location)
+        public static void ReportMissingPartialModifier(this SourceProductionContext ctx, string targetTypeName, Location location)
         {
-            ctx.ReportDiagnostic(Diagnostic.Create(MissingPartialModifier, location, typeName));
+            ctx.ReportDiagnostic(Diagnostic.Create(MissingPartialModifier, location, targetTypeName));
+        }
+
+        private static readonly DiagnosticDescriptor NoMappedMembers = new(
+            id: "TU002",
+            title: "No mapped members",
+            messageFormat: "Specified member selection flags doesn't yield any members from the {0} to map",
+            description: "Specified member selection flags doesn't yield any members to map.",
+            category: "TypeUtilities",
+            defaultSeverity: DiagnosticSeverity.Warning,
+            isEnabledByDefault: true);
+
+        public static void ReportNoMappedMembers(this SourceProductionContext ctx, INamedTypeSymbol sourceType, Location location)
+        {
+            ctx.ReportDiagnostic(Diagnostic.Create(NoMappedMembers, location, sourceType.Name));
         }
     }
 }

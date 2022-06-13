@@ -70,27 +70,5 @@ namespace TypeUtilities.SourceGenerators.Helpers
             found = default;
             return false;
         }
-
-        public static ISymbol? GetMember(this ITypeSymbol typeSymbol, string name, bool includeBase, CancellationToken token)
-        {
-            var directMember = typeSymbol.GetMembers(name).FirstOrDefault();
-
-            if (directMember is not null || !includeBase)
-                return directMember;
-
-            var currSymbol = typeSymbol.BaseType;
-            while (currSymbol is not null)
-            {
-                token.ThrowIfCancellationRequested();
-
-                var member = currSymbol.GetMembers(name).FirstOrDefault();
-                if (member is not null)
-                    return member;
-
-                currSymbol = currSymbol.BaseType;
-            }
-
-            return null;
-        }
     }
 }
