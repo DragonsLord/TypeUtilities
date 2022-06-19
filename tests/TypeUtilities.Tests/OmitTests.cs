@@ -1,4 +1,5 @@
-﻿using TypeUtilities.Tests.Fixture;
+﻿using Microsoft.CodeAnalysis;
+using TypeUtilities.Tests.Fixture;
 using TypeUtilities.Tests.Suites;
 using Xunit;
 
@@ -69,6 +70,35 @@ public partial class TargetType
 	public System.DateTime Created { get; set; }
 }");
     }
+
+    #region Diagnostics
+    [Fact]
+    public void ShouldWarnIfOmitMembersIsMissing()
+    {
+        // The source code to test
+        var source = @"
+using System;
+using TypeUtilities;
+
+namespace DiagnosticsTests;
+
+public class SourceType
+{
+    public Guid Id { get; set; }
+    public DateTime Created { get; set; }
+    private string secret;
+}
+
+[Omit(typeof(SourceType), ""Id"", ""secret"", ""none"")]
+public partial class TargetType { }
+";
+
+        var result = _fixture.Generate(source);
+
+        result
+            .ShouldHaveSingleDiagnostic("TU003", DiagnosticSeverity.Warning, "Members secret, none specified to be omitted are not present in the SourceType selection");
+    }
+    #endregion
 
     #region SyntaxErrors
     [Fact]

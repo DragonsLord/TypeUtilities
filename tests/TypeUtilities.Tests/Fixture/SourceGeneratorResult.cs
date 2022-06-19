@@ -9,12 +9,12 @@ namespace TypeUtilities.Tests.Fixture
     public class SourceGeneratorResult
     {
         public IReadOnlyDictionary<string, string>  GeneratedSources { get; }
-        public IReadOnlyDictionary<string, Diagnostic> Diagnostics { get; }
+        public IReadOnlyDictionary<string, List<Diagnostic>> Diagnostics { get; }
 
         public SourceGeneratorResult(GeneratorDriverRunResult runResult)
         {
             GeneratedSources = runResult.Results.SelectMany(r => r.GeneratedSources).ToDictionary(src => src.HintName, src => src.SourceText.ToString());
-            Diagnostics = runResult.Diagnostics.ToDictionary(d => d.Id);
+            Diagnostics = runResult.Diagnostics.GroupBy(d => d.Id).ToDictionary(x => x.Key, x => x.ToList());
         }
 
         public SourceGeneratorResult ShouldHaveSourcesCount(int count)
@@ -44,7 +44,8 @@ namespace TypeUtilities.Tests.Fixture
 
         public SourceGeneratorResult ShouldHaveDiagnosticsCount(int count)
         {
-            Assert.True(count == Diagnostics.Count, $"Should have {count} diagnostics, but actualy have {Diagnostics.Count}");
+            var actualCount = Diagnostics.Sum(x => x.Value.Count);
+            Assert.True(count == actualCount, $"Should have {count} diagnostics, but actualy have {actualCount}");
             return this;
         }
 
@@ -55,10 +56,9 @@ namespace TypeUtilities.Tests.Fixture
         {
             Assert.True(Diagnostics.ContainsKey(id), $"The diagnostics with id {id} is missing");
 
-            var diagnostic = Diagnostics[id];
+            var diagnostics = Diagnostics[id];
 
-            Assert.Equal(severity, diagnostic.Severity);
-            Assert.Equal(message, diagnostic.GetMessage());
+            Assert.Contains(diagnostics, x => x.Severity == severity && x.GetMessage() == message);
 
             return this;
         }

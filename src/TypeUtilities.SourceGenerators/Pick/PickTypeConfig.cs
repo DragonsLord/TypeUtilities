@@ -22,7 +22,7 @@ internal class PickTypeConfig : MapTypeConfig
         if (members.Length < Fields.Length)
         {
             var missingFields = Fields.Except(members.Select(x => x.Name));
-            context.ReportMissingMembersToPick(missingFields, attributeLocation);
+            context.ReportMissingMembersToPick(Source, missingFields, attributeLocation);
         }
 
         return members;

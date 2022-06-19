@@ -55,29 +55,29 @@ namespace TypeUtilities.SourceGenerators.Diagnostics
         private static readonly DiagnosticDescriptor MissingMembersToOmit = new(
             id: "TU003",
             title: "Missing members to omit",
-            messageFormat: "Members {0} specified to be omitted are not present in the selection",
+            messageFormat: "Members {0} specified to be omitted are not present in the {1} selection",
             description: "Some fields specified to be omitted are not present in the selection.",
             category: "TypeUtilities",
             defaultSeverity: DiagnosticSeverity.Warning,
             isEnabledByDefault: true);
 
-        public static void ReportMissingMembersToOmit(this SourceProductionContext ctx, IEnumerable<string> members, Location location)
+        public static void ReportMissingMembersToOmit(this SourceProductionContext ctx, INamedTypeSymbol sourceType, IEnumerable<string> members, Location location)
         {
-            ctx.ReportDiagnostic(Diagnostic.Create(MissingMembersToOmit, location, string.Join(", ", members)));
+            ctx.ReportDiagnostic(Diagnostic.Create(MissingMembersToOmit, location, string.Join(", ", members), sourceType.Name));
         }
 
         private static readonly DiagnosticDescriptor MissingMembersToPick = new(
             id: "TU004",
             title: "Missing members to pick",
-            messageFormat: "Members {0} are not present in the selection and will be missing",
+            messageFormat: "Members {0} are not present in the {1} selection and will be missing",
             description: "Some fields specified to be picked are not present in the selection.",
             category: "TypeUtilities",
             defaultSeverity: DiagnosticSeverity.Warning,
             isEnabledByDefault: true);
 
-        public static void ReportMissingMembersToPick(this SourceProductionContext ctx, IEnumerable<string> members, Location location)
+        public static void ReportMissingMembersToPick(this SourceProductionContext ctx, INamedTypeSymbol sourceType, IEnumerable<string> members, Location location)
         {
-            ctx.ReportDiagnostic(Diagnostic.Create(MissingMembersToPick, location, string.Join(", ", members)));
+            ctx.ReportDiagnostic(Diagnostic.Create(MissingMembersToPick, location, string.Join(", ", members), sourceType.Name));
         }
     }
 }

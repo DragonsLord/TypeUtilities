@@ -24,7 +24,7 @@ internal class OmitTypeConfig : MapTypeConfig
         if (allMembers.Length - omited.Length < Fields.Length)
         {
             var missingFields = Fields.Except(allMembers.Select(x => x.Name));
-            context.ReportMissingMembersToOmit(missingFields, attributeLocation);
+            context.ReportMissingMembersToOmit(Source, missingFields, attributeLocation);
         }
 
         return omited;
