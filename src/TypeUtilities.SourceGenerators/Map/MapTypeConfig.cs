@@ -124,7 +124,7 @@ internal class MapTypeConfig
         MemberKindSelection = config.MemberKindSelection;
     }
 
-    public virtual IEnumerable<ISymbol> GetMembers()
+    public virtual IEnumerable<ISymbol> GetMembers(SourceProductionContext context, Location attributeLocation)
     {
         return Source
             .GetExplicitMembers(IncludeBaseTypes)

@@ -34,7 +34,7 @@ internal static class MapSourceGeneratorExtensions
             if (config is null)
                 return;
 
-            var members = config.GetMembers();
+            var members = config.GetMembers(context, attributeSyntax.GetLocation());
 
             if (!members.Any())
                 context.ReportNoMappedMembers(config.Source, attributeSyntax.GetLocation());

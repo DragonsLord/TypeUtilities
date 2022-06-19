@@ -1,5 +1,5 @@
 ﻿using Microsoft.CodeAnalysis;
-using TypeUtilities.Abstractions;
+using TypeUtilities.SourceGenerators.Diagnostics;
 using TypeUtilities.SourceGenerators.Helpers;
 using TypeUtilities.SourceGenerators.Map;
 
@@ -15,9 +15,17 @@ internal class PickTypeConfig : MapTypeConfig
         Fields = fields;
     }
 
-    public override IEnumerable<ISymbol> GetMembers()
+    public override IEnumerable<ISymbol> GetMembers(SourceProductionContext context, Location attributeLocation)
     {
-        return base.GetMembers().Where(m => Fields.Contains(m.Name));
+        var members = base.GetMembers(context, attributeLocation).Where(m => Fields.Contains(m.Name)).ToArray();
+
+        if (members.Length < Fields.Length)
+        {
+            var missingFields = Fields.Except(members.Select(x => x.Name));
+            context.ReportMissingMembersToPick(missingFields, attributeLocation);
+        }
+
+        return members;
     }
 
     public static new PickTypeConfig? Create(INamedTypeSymbol targetTypeSymbol)

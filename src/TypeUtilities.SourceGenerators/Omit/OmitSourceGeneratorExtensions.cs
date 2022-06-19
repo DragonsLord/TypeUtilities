@@ -21,8 +21,6 @@ internal static class OmitSourceGeneratorExtensions
             var attributeSyntax = tuple.Left.Left!;
             var compilation = tuple.Right!;
 
-            // TODO: add diagnostic to worn about fields missing in the selection
-
             context.AddMappedTypeSource("omit", attributeSyntax, compilation, OmitTypeConfig.Create);
         });
 

@@ -1,5 +1,6 @@
 ﻿using Microsoft.CodeAnalysis;
 using TypeUtilities.Abstractions;
+using TypeUtilities.SourceGenerators.Diagnostics;
 using TypeUtilities.SourceGenerators.Helpers;
 using TypeUtilities.SourceGenerators.Map;
 
@@ -15,9 +16,18 @@ internal class OmitTypeConfig : MapTypeConfig
         Fields = fields;
     }
 
-    public override IEnumerable<ISymbol> GetMembers()
+    public override IEnumerable<ISymbol> GetMembers(SourceProductionContext context, Location attributeLocation)
     {
-        return base.GetMembers().Where(m => !Fields.Contains(m.Name));
+        var allMembers = base.GetMembers(context, attributeLocation).ToArray();
+        var omited = allMembers.Where(m => !Fields.Contains(m.Name)).ToArray();
+
+        if (allMembers.Length - omited.Length < Fields.Length)
+        {
+            var missingFields = Fields.Except(allMembers.Select(x => x.Name));
+            context.ReportMissingMembersToOmit(missingFields, attributeLocation);
+        }
+
+        return omited;
     }
 
     public static new OmitTypeConfig? Create(INamedTypeSymbol targetTypeSymbol)
