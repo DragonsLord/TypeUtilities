@@ -1,4 +1,5 @@
-﻿using TypeUtilities.Tests.Fixture;
+﻿using Microsoft.CodeAnalysis;
+using TypeUtilities.Tests.Fixture;
 using TypeUtilities.Tests.Suites;
 using Xunit;
 
@@ -70,6 +71,36 @@ public partial class TargetType
 	public System.DateTime Created { get; set; }
 }");
     }
+
+    #region Diagnostics
+
+    [Fact]
+    public void ShouldWarnIfPickMembersIsMissing()
+    {
+        // The source code to test
+        var source = @"
+using System;
+using TypeUtilities;
+
+namespace DiagnosticsTests;
+
+public class SourceType
+{
+    public Guid Id { get; set; }
+    public DateTime Created { get; set; }
+}
+
+[Pick(typeof(SourceType), ""Id"", ""Member1"", ""Member2"")]
+public partial class TargetType { }
+";
+
+        var result = _fixture.Generate(source);
+
+        result
+            .ShouldHaveSingleDiagnostic("TU004", DiagnosticSeverity.Warning, "Members Member1, Member2 are not present in the SourceType selection and will be missing");
+    }
+
+    #endregion
 
     #region SyntaxErrors
     [Fact]
@@ -144,7 +175,7 @@ public partial class TargetType1
 ");
     }
 
-    [Fact] //TODO: Theory
+    [Fact]
     public void ShouldHandleIncludeBaseSyntaxErrors()
     {
         // The source code to test

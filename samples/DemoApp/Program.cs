@@ -27,7 +27,7 @@ public class SourceType : Base
     public int Value { get; set; }
     public DateTime Created { get; set; }
 
-    public static CustomType SrcType => CustomType.First; //TODO: support static
+    public static CustomType SrcType => CustomType.First;
 
     public readonly int idField = 1;
 

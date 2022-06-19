@@ -71,7 +71,7 @@ namespace MapTests;
 public partial class TargetType1 { }");
     }
 
-    [Fact] //TODO: Theory
+    [Fact]
     public void ShouldHandleIncludeBaseSyntaxErrors()
     {
         // The source code to test
