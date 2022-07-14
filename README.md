@@ -3,7 +3,7 @@
 [![Build](https://github.com/DragonsLord/TypeUtilities/actions/workflows/build.yml/badge.svg)](https://github.com/DragonsLord/TypeUtilities/actions/workflows/build.yml)
 [![NuGet](https://img.shields.io/nuget/v/TypeUtilities.svg)](https://www.nuget.org/packages/TypeUtilities/)
 
-Type Utilities provides a source generators to create/transform one types into another.
+Type Utilities provides a source generators to create/transform one type into another.
 
 This project was inspired by the [TypeScript Utility Types](https://www.typescriptlang.org/docs/handbook/utility-types.html) and was ment to bring similar functionality to the C# via source generators
 
@@ -64,9 +64,9 @@ public partial class SimpleMap
 //----- SimpleMap.map.SourceType.g.cs
 public partial class SimpleMap
 {
-	public System.Guid Id { get; }
-	public int Value { get; set; }
-	public System.DateTime Created { get; set; }
+    public System.Guid Id { get; }
+    public int Value { get; set; }
+    public System.DateTime Created { get; set; }
 }
 // --------------------
 
@@ -82,7 +82,7 @@ public partial class AdvancedMap
 //----- AdvancedMap.map.SourceType.g.cs
 public partial class AdvancedMap
 {
-	public string MappedId { get; }
+	  public string MappedId { get; }
 }
 // --------------------
 ```
@@ -118,7 +118,7 @@ public partial class TargetType
 
 ### Pick
 
-Omit Attribute is similar to Map but also requires to explicitly specify all members that should be included
+Pick Attribute is similar to Map but also requires to explicitly specify all members that should be included
 
 ```csharp
 using TypeUtilities;
