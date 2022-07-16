@@ -23,8 +23,8 @@ public class Base
 
 public class SourceType : Base
 {
-    public Guid Id { get; set; }
-    public int Value { get; set; }
+    public Guid Id { get; init; }
+    public int Value { get; private set; }
     public DateTime Created { get; set; }
 
     public static CustomType SrcType => CustomType.First;
@@ -51,5 +51,18 @@ public partial class OmittedType
     MemberScopeSelection = MemberScopeFlags.Any,
     MemberKindSelection = MemberKindFlags.ReadonlyProperty | MemberKindFlags.WritableField)]
 public partial class BasicallyMap
+{
+}
+
+
+[Map(typeof(SourceType))]
+public partial class SimpleMap
+{
+}
+
+[Map(typeof(SourceType),
+    MemberDeclarationFormat = $"{Tokens.Accessibility} string Mapped{Tokens.Name}{Tokens.Accessors}",
+    MemberKindSelection = MemberKindFlags.ReadonlyProperty)]
+public partial class AdvancedMap
 {
 }

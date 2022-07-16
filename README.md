@@ -7,7 +7,7 @@ Type Utilities provides a source generators to create/transform one type into an
 
 This project was inspired by the [TypeScript Utility Types](https://www.typescriptlang.org/docs/handbook/utility-types.html) and was ment to bring similar functionality to the C# via source generators
 
-## Instalation
+## Installation
 
 To use the the TypeUtilities, install the [TypeUtilities package](https://www.nuget.org/packages/TypeUtilities) into your project.
 

@@ -29,8 +29,25 @@ namespace TypeUtilities.SourceGenerators.Helpers
 
         public static string GetAccessors(this IPropertySymbol symbol)
         {
-            var get = symbol.GetMethod is null ? string.Empty : " get;";
-            var set = symbol.SetMethod is null ? string.Empty : " set;";
+            string GetAccessorDeclaration(IMethodSymbol method, string accessor)
+            {
+
+                var accessibility = method.DeclaredAccessibility == symbol.DeclaredAccessibility ?
+                    "" : method.DeclaredAccessibility.ToString().ToLower() + " ";
+
+                return $" {accessibility}{accessor};";
+            }
+
+            string GetSetDeclaration(IMethodSymbol setMethod)
+            {
+                if (setMethod.IsInitOnly)
+                    return " init;";
+
+                return GetAccessorDeclaration(setMethod, "set");
+            }
+
+            var get = symbol.GetMethod is null ? string.Empty : GetAccessorDeclaration(symbol.GetMethod, "get");
+            var set = symbol.SetMethod is null ? string.Empty : GetSetDeclaration(symbol.SetMethod);
 
             return "{" + get + set + " }";
         }

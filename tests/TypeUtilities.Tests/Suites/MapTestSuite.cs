@@ -559,4 +559,39 @@ public class SourceType
             //.ShouldNotHaveDiagnostics()
             .ShouldHaveSingleSource($"TargetType.{_attributeName.ToLower()}.SourceType.g.cs", expected.ToString());
     }
+
+    [Fact]
+    public void ShouldHandleAccessorAccesibilitiesField()
+    {
+        // The source code to test
+        var source = new StringBuilder(@"
+using System;
+using TypeUtilities;
+
+namespace MapTests;
+
+public class SourceType
+{
+    public Guid Id { get; private set; }
+    public int Value { get; init; }
+    public DateTime Created { protected get; set; }
+}
+")
+    .AppendLine($"[{_attributeName}(typeof(SourceType){_additionCtorArgs})]")
+    .AppendLine("public partial class TargetType {}")
+    .ToString();
+
+        var result = _fixture.Generate(source);
+
+        result
+            .ShouldHaveSingleSource($"TargetType.{_attributeName.ToLower()}.SourceType.g.cs", @"
+namespace MapTests;
+
+public partial class TargetType
+{
+    public System.Guid Id { get; private set; }
+    public int Value { get; init; }
+    public System.DateTime Created { protected get; set; }
+}");
+    }
 }
