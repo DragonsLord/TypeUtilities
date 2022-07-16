@@ -71,7 +71,7 @@ public partial class SimpleMap
 // --------------------
 
 [Map(typeof(SourceType),
-      MemberDeclarationFormat = $"{Tokens.Accessibility} string Mapped{Tokens.    Name}{Tokens.Accessors}",
+      MemberDeclarationFormat = $"{Tokens.Accessibility} string Mapped{Tokens.Name}{Tokens.Accessors}",
       MemberKindSelection = MemberKindFlags.ReadonlyProperty
     )]
 public partial class AdvancedMap
@@ -82,7 +82,7 @@ public partial class AdvancedMap
 //----- AdvancedMap.map.SourceType.g.cs
 public partial class AdvancedMap
 {
-	  public string MappedId { get; }
+    public string MappedId { get; }
 }
 // --------------------
 ```
