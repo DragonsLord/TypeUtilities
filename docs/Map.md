@@ -12,8 +12,8 @@ Let's cover each one in more details
 
 ## MemberDeclarationFormat
 
-MemberDeclarationFormat allows you to provide format in wich target member will be generated.
-By default it will have the same format as source but you can customize it.
+MemberDeclarationFormat allows you to provide format in wich target member will be generated.  
+By default it will have the **same format as a source** but you can customize it.
 
 MemberDeclarationFormat accepts source string with the tokens support. Tokens will be replaced with the source value.
 Here is full list of tokens:
@@ -70,8 +70,8 @@ public partial class MappedType
 
 ## IncludeBaseTypes
 
-IncludeBaseTypes allows you to map members not only from the source type but of the source base type as well.
-By default base types are not included
+IncludeBaseTypes allows you to map members not only from the source type but of the source base type as well.  
+By default base types are **not** included
 
 ### Example
 
@@ -122,8 +122,8 @@ public partial class MappedWithBaseTypes
 
 ## MemberAccessibilitySelection
 
-MemberAccessibilitySelection allows you map only member with specified accesibility.
-By default only membrers with Public accessibility are included
+MemberAccessibilitySelection allows you map only member with specified accesibility.  
+By default only membrers with **public** accessibility are included
 
 ### Example
 
@@ -155,8 +155,8 @@ public partial class MappedType
 
 ## MemberScopeSelection
 
-MemberScopeSelection allows you map only member with specified scope (static or instance members).
-By default only instance membrers are included
+MemberScopeSelection allows you map only member with specified scope (static or instance members).  
+By default **only instance membrers** are included
 
 ### Example
 
@@ -186,8 +186,8 @@ public partial class MappedType
 
 ## MemberKindSelection
 
-MemberKindSelection allows you map only specific kind of member like readonly props or fields etc.
-By default only properties are included
+MemberKindSelection allows you map only specific kind of member like readonly props or fields etc.  
+By default **only properties** are included
 
 ### Example
 
