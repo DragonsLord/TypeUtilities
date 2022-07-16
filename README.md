@@ -87,6 +87,8 @@ public partial class AdvancedMap
 // --------------------
 ```
 
+More detailed description for Map is provided [here](docs/Map.md)
+
 ### Omit
 
 Omit Attribute is similar to Map but also accepts an explicit list of members that should be exluded
