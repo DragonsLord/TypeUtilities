@@ -17,24 +17,7 @@ To install the packages, add the references to your _csproj_ file, for example b
 dotnet add package TypeUtilities --prerelease
 ```
 
-This adds a `<PackageReference>` to your project. You can additionally mark the package as `PrivateAsets="all"` and `ExcludeAssets="runtime"`.
-
-> Setting `PrivateAssets="all"` means any projects referencing this one will not also get a reference to the _TypeUtilities_ package. Setting `ExcludeAssets="runtime"` ensures the _TypeUtilities.Abstractions.dll_ file is not copied to your build output (it is not required at runtime).
-
-```xml
-<Project Sdk="Microsoft.NET.Sdk">
-
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>net6.0</TargetFramework>
-  </PropertyGroup>
-
-  <!-- Add the package -->
-  <PackageReference Include="TypeUtilities" Version="0.0.1-alpha2" PrivateAssets="all" ExcludeAssets="runtime" />
-  <!-- -->
-
-</Project>
-```
+This adds a `<PackageReference>` to your project.
 
 ## Usage
 
