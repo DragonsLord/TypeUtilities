@@ -14,7 +14,7 @@ To use the the TypeUtilities, install the [TypeUtilities package](https://www.nu
 To install the packages, add the references to your _csproj_ file, for example by running
 
 ```bash
-dotnet add package TypeUtilities --prerelease
+dotnet add package TypeUtilities
 ```
 
 This adds a `<PackageReference>` to your project.
