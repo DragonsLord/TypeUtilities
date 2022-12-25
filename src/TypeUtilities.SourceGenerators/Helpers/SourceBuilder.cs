@@ -1,6 +1,5 @@
 ﻿using Microsoft.CodeAnalysis;
-using System;
-using System.Collections.Generic;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Text;
 
 namespace TypeUtilities.SourceGenerators.Helpers
@@ -22,14 +21,21 @@ namespace TypeUtilities.SourceGenerators.Helpers
             return AddLine($"namespace {name}").OpenScope();
         }
 
-        public SourceBuilder AddTypeDeclaration(SyntaxTokenList modifiers, SyntaxToken typeKind, SyntaxToken name)
+        public SourceBuilder AddTypeDeclaration(SyntaxTokenList modifiers, SyntaxToken typeKind, SyntaxToken name, TypeParameterListSyntax? typeParameters, BaseListSyntax? baseList)
         {
-            return AddLine($"{modifiers} {typeKind} {name}").OpenScope();
+            var baseListSrc = baseList is null ? string.Empty : " " + baseList.ToString();
+            return AddLine($"{modifiers} {typeKind} {name}{typeParameters?.ToString() ?? string.Empty}{baseListSrc}").OpenScope();
         }
 
         public SourceBuilder AddLine(string line)
         {
             _stringBuilder.AppendLine(_indent + line);
+            return this;
+        }
+
+        public SourceBuilder AddLines(params string[] lines)
+        {
+            foreach (var line in lines) AddLine(line);
             return this;
         }
 

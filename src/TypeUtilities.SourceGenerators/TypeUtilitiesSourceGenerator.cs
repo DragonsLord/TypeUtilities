@@ -4,6 +4,7 @@ using TypeUtilities.SourceGenerators.Helpers;
 using TypeUtilities.SourceGenerators.Omit;
 using TypeUtilities.SourceGenerators.Pick;
 using TypeUtilities.SourceGenerators.Map;
+using TypeUtilities.SourceGenerators.MapTemplate;
 
 namespace TypeUtilities.SourceGenerators
 {
@@ -23,7 +24,8 @@ namespace TypeUtilities.SourceGenerators
             context
                 .CreateMapUtility(typesDict)
                 .CreatePickUtility(typesDict)
-                .CreateOmitUtility(typesDict);
+                .CreateOmitUtility(typesDict)
+                .CreateMapTemplateUtility();
         }
     }
 }

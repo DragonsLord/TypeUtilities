@@ -1,4 +1,5 @@
 ﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Text.RegularExpressions;
 
@@ -10,10 +11,9 @@ namespace TypeUtilities.SourceGenerators.Helpers
             where T : Attribute
         {
             var attributeType = typeof(T);
-            var attributeNameRegex = new Regex($"^({attributeType.Namespace})?{attributeType.GetShortAttributeName()}(Attribute)?$");
 
             return syntaxProvider.CreateSyntaxProvider(
-                predicate: (node, _) => node is AttributeSyntax attr && attributeNameRegex.IsMatch(attr.Name.ToString()),
+                predicate: (node, _) => node is AttributeSyntax attr && attr.Is<T>(),
                 transform: (ctx, ct) =>
                 {
                     try
@@ -40,6 +40,33 @@ namespace TypeUtilities.SourceGenerators.Helpers
                     }
 
                 }).WhereNotNull();
+        }
+
+        public static IncrementalValuesProvider<InvocationExpressionSyntax> CreateInvocationExpressionProvider(this SyntaxValueProvider syntaxProvider, string methodName, string[] targetTypeNames)
+        {
+            return syntaxProvider.CreateSyntaxProvider(
+                predicate: (node, _) =>
+                    node is InvocationExpressionSyntax invocation &&
+                    invocation.Expression is MemberAccessExpressionSyntax invokeMember && invokeMember.Name.Identifier.ToString() == methodName &&
+                    invokeMember.Expression is TypeSyntax targetType && targetTypeNames.Contains(targetType.ToString()),
+                transform: (ctx, token) => (InvocationExpressionSyntax)ctx.Node);
+        }
+
+        public static IncrementalValuesProvider<(InvocationExpressionSyntax Invocation, IdentifierNameSyntax InstanceType)> CreateInvocationExpressionProvider(this SyntaxValueProvider syntaxProvider, string methodName, int argsCount)
+        {
+            return syntaxProvider.CreateSyntaxProvider(
+                predicate: (node, _) =>
+                    node is InvocationExpressionSyntax invocation && invocation.ArgumentList.Arguments.Count == argsCount &&
+                    invocation.Expression is MemberAccessExpressionSyntax invokeMember && invokeMember.Name.Identifier.ValueText == methodName,
+                transform: (ctx, token) =>
+                {
+                    var invocationExpression = (InvocationExpressionSyntax)ctx.Node;
+                    var instance = ((MemberAccessExpressionSyntax)invocationExpression.Expression).Expression;
+                    if (instance is not IdentifierNameSyntax instanceTypeIdentifier)
+                        return default;
+                    return (invocationExpression, instanceTypeIdentifier);
+                })
+                .Where(x => x != default);
         }
 
         public static IncrementalValuesProvider<T> WhereNotNull<T>(this IncrementalValuesProvider<T?> provider)

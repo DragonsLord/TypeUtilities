@@ -10,6 +10,8 @@ public static class Program
 {
     public static void Main(string[] args)
     {
+        Base source = new Base { BaseType = CustomType.First };
+        var fromTemplate = MapTemplate.Map(source);
         var val = new OmittedType();
         var props = typeof(BasicallyMap).GetMembers().Select(p => $"{p.DeclaringType?.Name} {p.Name}").ToArray();
         Console.WriteLine(string.Join(", ", props));
@@ -65,4 +67,14 @@ public partial class SimpleMap
     MemberKindSelection = MemberKindFlags.ReadonlyProperty)]
 public partial class AdvancedMap
 {
+}
+
+public record WrapContainer<T>(string Name, T Value);
+
+[MapTemplate(MemberDeclarationFormat = $"{Tokens.Accessibility} WrapContainer<{Tokens.Type}> {Tokens.Name}{Tokens.Accessors}")]
+public partial class MapTemplate<T>
+{
+    [MemberMapping]
+    protected WrapContainer<TProp> MapMember<TProp>(string memberName, TProp value)
+        => new WrapContainer<TProp>(memberName, value);
 }
