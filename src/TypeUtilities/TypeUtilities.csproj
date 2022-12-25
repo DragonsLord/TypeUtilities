@@ -4,15 +4,12 @@
 		<TargetFramework>netstandard2.0</TargetFramework>
 		<IncludeBuildOutput>false</IncludeBuildOutput>
 		<PackageId>TypeUtilities</PackageId>
-		<Version>0.0.1-beta01</Version>
+		<Version>0.0.1</Version>
 		<Authors>Yevhenii Serdiuk</Authors>
 		<PackageProjectUrl>https://github.com/DragonsLord/TypeUtilities</PackageProjectUrl>
 		<PackageTags>Types;Type-Utilities;Type-Mapping;Pick;Omit;Source-Generators;Generator;Generation;Codegen</PackageTags>
 		<Description>
-			A set of type utilities to transform types.
-			Include utils like:
-				- Pick
-				- Omit
+			Typescript-like Type Utilities powered by Source Generator
 		</Description>
 	</PropertyGroup>
 
