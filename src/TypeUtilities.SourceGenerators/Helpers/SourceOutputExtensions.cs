@@ -7,6 +7,49 @@ using static TypeUtilities.Abstractions.MemberDeclarationFormats;
 
 namespace TypeUtilities.SourceGenerators.Helpers
 {
+    internal static class MemberFormat
+    {
+        public static string ApplyFormat(string format, string accessibility, string scope, string fieldAccess, string type, string name, string accessors)
+        {
+            return format
+                .Replace(Tokens.Accessibility, accessibility)
+                .Replace(Tokens.Scope, scope)
+                .Replace(Tokens.FieldAccess, fieldAccess)
+                .Replace(Tokens.Type, type)
+                .Replace(Tokens.Name, name)
+                .Replace(Tokens.Accessors, accessors);
+        }
+
+        public static string? FormatDeclaration(ISymbol? symbol, string format)
+        {
+            if (symbol is null)
+                return null;
+
+            var accessibility = symbol.DeclaredAccessibility.ToString().ToLower();
+            var scope = symbol.IsStatic ? " static" : string.Empty;
+
+            if (symbol is IPropertySymbol prop)
+            {
+                var type = prop.Type.ToDisplayString();
+                var name = prop.Name;
+                var accessors = " " + prop.GetAccessors();
+
+                return ApplyFormat(format, accessibility, scope, string.Empty, type, name, accessors);
+            }
+
+            if (symbol is IFieldSymbol field)
+            {
+                var type = field.Type.ToDisplayString();
+                var name = field.Name;
+                var fieldAccess = field.IsReadOnly ? " readonly" : string.Empty;
+
+                return ApplyFormat(format, accessibility, scope, fieldAccess, type, name, ";");
+            }
+
+            return null;
+        }
+    }
+
     internal static class PrintableMember
     {
         public static Action<SourceBuilder> FromSourceLines(params string[] srcLines)
@@ -27,44 +70,15 @@ namespace TypeUtilities.SourceGenerators.Helpers
 
         public static Action<SourceBuilder> EmptyLine() => sourceBuilder => sourceBuilder.AddLine(string.Empty);
 
-        private static string ApplyFormat(string format, string accessibility, string scope, string fieldAccess, string type, string name, string accessors)
-        {
-            return format
-                .Replace(Tokens.Accessibility, accessibility)
-                .Replace(Tokens.Scope, scope)
-                .Replace(Tokens.FieldAccess, fieldAccess)
-                .Replace(Tokens.Type, type)
-                .Replace(Tokens.Name, name)
-                .Replace(Tokens.Accessors, accessors);
-        }
-
         public static Action<SourceBuilder> FromSymbol(ISymbol? symbol, string format)
         {
+            var declaration = MemberFormat.FormatDeclaration(symbol, format);
+
             return sourceBuilder =>
             {
-                if (symbol is null)
-                    return;
-
-                var accessibility = symbol.DeclaredAccessibility.ToString().ToLower();
-                var scope = symbol.IsStatic ? " static" : string.Empty;
-
-                if (symbol is IPropertySymbol prop)
+                if (declaration is not null)
                 {
-                    var type = prop.Type.ToDisplayString();
-                    var name = prop.Name;
-                    var accessors = " " + prop.GetAccessors();
-
-                    sourceBuilder.AddLine(ApplyFormat(format, accessibility, scope, string.Empty, type, name, accessors));
-                    return;
-                }
-
-                if (symbol is IFieldSymbol field)
-                {
-                    var type = field.Type.ToDisplayString();
-                    var name = field.Name;
-                    var fieldAccess = field.IsReadOnly ? " readonly" : string.Empty;
-
-                    sourceBuilder.AddLine(ApplyFormat(format, accessibility, scope, fieldAccess, type, name, ";"));
+                    sourceBuilder.AddLine(declaration);
                 }
             };
         }

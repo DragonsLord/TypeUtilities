@@ -149,6 +149,8 @@ internal static class MapTemplateSourceGeneratorExtensions
                     continue;
                 }
 
+                var mappedMembersDelarations = sourceMembers.Select(x => (Symbol: x, Format: MemberFormat.FormatDeclaration(x, config.MemberDeclarationFormat))).Where(x => x.Format != null).ToArray();
+
                 var mappedTypeName = $"{mapTemplate.TemplateType.Identifier.ValueText}Of{sourceTypeSymbol.Name}";
 
                 var mappedTypeDeclaration = mapTemplate.TemplateType
@@ -162,11 +164,14 @@ internal static class MapTemplateSourceGeneratorExtensions
 
                 var ctorMember = PrintableMember.FunctionSource(
                     $"public {mappedTypeName}({sourceTypeSymbol.Name} source)",
-                    // TODO: respected member declaration format
-                    sourceMembers.Select(x => $"this.{x.Name} = {mapTemplate.MemberMapping.Identifier.ValueText}(\"{x.Name}\", source.{x.Name});").ToArray()
+                    mappedMembersDelarations
+                        .Select(x => (Source: x.Symbol, Target: SyntaxFactory.ParseMemberDeclaration(x.Format!)?.TryGetIdentifier()))
+                        .Where(x => x.Target is not null)
+                        .Select(x =>
+                            $"this.{x.Target} = {mapTemplate.MemberMapping.Identifier.ValueText}(\"{x.Source.Name}\", source.{x.Source.Name});").ToArray()
                 );
 
-                var members = sourceMembers.Select(x => PrintableMember.FromSymbol(x, config.MemberDeclarationFormat)).Concat(new[] { PrintableMember.EmptyLine(), ctorMember });
+                var members = mappedMembersDelarations.Select(x => PrintableMember.FromSourceLines(x.Format!)).Concat(new[] { PrintableMember.EmptyLine(), ctorMember });
 
                 context.WriteType(mappedTypeDeclaration, members, $"{mappedTypeName}.g.cs", token);
             }
@@ -190,6 +195,16 @@ internal static class MapTemplateSourceGeneratorExtensions
         });
 
         return context;
+    }
+
+    private static SyntaxToken? TryGetIdentifier(this MemberDeclarationSyntax memberDeclaration)
+    {
+        return memberDeclaration switch
+        {
+            PropertyDeclarationSyntax prop => prop.Identifier,
+            FieldDeclarationSyntax field => field.Declaration.Variables.FirstOrDefault()?.Identifier,
+            _ => null
+        };
     }
 
     private static T WithNamespace<T>(this T thisNode, BaseNamespaceDeclarationSyntax? namespaceNode)

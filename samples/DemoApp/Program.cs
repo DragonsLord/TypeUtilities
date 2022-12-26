@@ -71,7 +71,7 @@ public partial class AdvancedMap
 
 public record WrapContainer<T>(string Name, T Value);
 
-[MapTemplate(MemberDeclarationFormat = $"{Tokens.Accessibility} WrapContainer<{Tokens.Type}> {Tokens.Name}{Tokens.Accessors}")]
+[MapTemplate(MemberDeclarationFormat = $"{Tokens.Accessibility} WrapContainer<{Tokens.Type}> {Tokens.Name}Wrap{Tokens.Accessors}")]
 public partial class MapTemplate<T>
 {
     [MemberMapping]
