@@ -1,5 +1,5 @@
 ﻿using Microsoft.CodeAnalysis;
-using TypeUtilities.SourceGenerators.Diagnostics;
+using TypeUtilities.SourceGenerators.Analyzer;
 using TypeUtilities.SourceGenerators.Helpers;
 using TypeUtilities.SourceGenerators.Map;
 

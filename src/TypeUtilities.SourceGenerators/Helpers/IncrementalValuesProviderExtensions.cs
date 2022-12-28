@@ -2,6 +2,8 @@
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Text.RegularExpressions;
+using TypeUtilities.SourceGenerators.Analyzer;
+using TypeUtilities.SourceGenerators.Models;
 
 namespace TypeUtilities.SourceGenerators.Helpers
 {
@@ -72,6 +74,28 @@ namespace TypeUtilities.SourceGenerators.Helpers
         public static IncrementalValuesProvider<T> WhereNotNull<T>(this IncrementalValuesProvider<T?> provider)
         {
             return provider.Where(x => x is not null)!;
+        }
+
+        public static IncrementalValuesProvider<TOut> SelectFromSyntax<TIn, TOut>(this IncrementalValuesProvider<TIn> provider, Func<TIn, CancellationToken, ISyntaxResult<TOut>> selectFn, IncrementalGeneratorInitializationContext context)
+            where TIn : SyntaxNode
+        {
+            return provider.Select((syntax, token) =>
+            {
+                try
+                {
+                    return selectFn(syntax, token);
+                }
+                catch (Exception ex)
+                {
+                    return SyntaxResult.Fail<TOut>(Diagnostics.InternalError(ex, syntax));
+                }
+            }).Unwrap(context);
+        }
+
+        public static IncrementalValuesProvider<T> Unwrap<T>(this IncrementalValuesProvider<ISyntaxResult<T>> provider, IncrementalGeneratorInitializationContext context)
+        {
+            context.RegisterSourceOutput(provider.Where(r => r.IsDiagnostic), static (ctx, result) => ctx.ReportDiagnostic(result.Diagnostic!));
+            return provider.Where(x => x.IsSuccess).Select((x, ct) => x.Result!);
         }
     }
 }

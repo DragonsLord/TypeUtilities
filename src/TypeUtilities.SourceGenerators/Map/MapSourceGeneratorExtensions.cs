@@ -1,7 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using TypeUtilities.SourceGenerators.Helpers;
-using TypeUtilities.SourceGenerators.Diagnostics;
+using TypeUtilities.SourceGenerators.Analyzer;
 
 namespace TypeUtilities.SourceGenerators.Map;
 

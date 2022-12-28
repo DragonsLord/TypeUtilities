@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
+using TypeUtilities.SourceGenerators.Models;
 
 namespace TypeUtilities.SourceGenerators.Helpers
 {
@@ -69,6 +70,15 @@ namespace TypeUtilities.SourceGenerators.Helpers
 
             found = default;
             return false;
+        }
+
+        public static ISyntaxResult<T> FindParent<T>(this SyntaxNode node, CancellationToken token = default)
+            where T : SyntaxNode
+        {
+            if (TryFindParent<T>(node, out var result, token))
+                return SyntaxResult.Ok(result);
+
+            return SyntaxResult.Skip<T>();
         }
     }
 }

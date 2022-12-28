@@ -1,10 +1,9 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using TypeUtilities.SourceGenerators.Helpers;
-using TypeUtilities.SourceGenerators.Diagnostics;
-using TypeUtilities.SourceGenerators.Map;
 using Microsoft.CodeAnalysis.CSharp;
-using System.Collections.Immutable;
+using TypeUtilities.SourceGenerators.Models;
+using TypeUtilities.SourceGenerators.Analyzer;
 
 namespace TypeUtilities.SourceGenerators.MapTemplate;
 
@@ -17,83 +16,36 @@ internal static class MapTemplateSourceGeneratorExtensions
         public MethodDeclarationSyntax MemberMapping { get; set; }
     }
 
-    private static IncrementalValuesProvider<MapTemplateMetadata> GetMapTemplateMetadata(this IncrementalValuesProvider<AttributeSyntax> attributeSyntaxProvider)
+    private static IncrementalValuesProvider<MapTemplateMetadata> GetMapTemplateMetadata(this IncrementalValuesProvider<AttributeSyntax> attributeSyntaxProvider, IncrementalGeneratorInitializationContext context)
     {
-        return attributeSyntaxProvider.Select((attributeSyntax, token) =>
-        {
-            try
+        return attributeSyntaxProvider.SelectFromSyntax((attributeSyntax, token) =>
+        (
+            from targetTypeSyntax in attributeSyntax
+                    .FindParent<TypeDeclarationSyntax>(token)
+                    .Where(x => x.Modifiers.Any(m => m.ValueText == "partial"), Diagnostics.MissingPartialModifier)
+                    .Where(x => x.TypeParameterList is not null, Diagnostics.MissingTypeParameter)
+                    .Where(x => x.TypeParameterList!.Parameters.Count == 1, Diagnostics.MoreThenOneTypeParameter)
+            from memberMapping in targetTypeSyntax.Members
+                    .Where(member => member.AttributeLists.SelectMany(x => x.Attributes).Any(x => x.Is<MemberMappingAttribute>()))
+                    .ToArray().AsSyntaxResult()
+                    .Where(x => x.Any(), Diagnostics.MissingMemberMapping(targetTypeSyntax))
+                    .Where(x => x.Length == 1, x => Diagnostics.MoreThenOneMemberMapping(targetTypeSyntax, x))
+                    .Where(x => x[0] is MethodDeclarationSyntax) //TODO: only mathod is supported for member mapping Diagnostic ?
+            select new MapTemplateMetadata
             {
-                if (!attributeSyntax.TryFindParent<TypeDeclarationSyntax>(out var targetTypeSyntax, token))
-                    return null;
-
-                if (!targetTypeSyntax.Modifiers.Any(m => m.ValueText == "partial"))
-                {
-                    // context.ReportMissingPartialModifier(targetTypeSyntax);
-                    return null;
-                }
-
-                if (targetTypeSyntax.TypeParameterList is null)
-                {
-                    // No Type Parameter Found
-                    return null;
-                }
-
-                if (targetTypeSyntax.TypeParameterList.Parameters.Count > 1)
-                {
-                    // More Then One Type Parameter  Found
-                    return null;
-                }
-
-                var memberMappings = targetTypeSyntax.Members.Where(member => member.AttributeLists.SelectMany(x => x.Attributes).Any(x => x.Is<MemberMappingAttribute>())).ToArray();
-                if (!memberMappings.Any())
-                {
-                    // No Member Mapping Found
-                    return null;
-                }
-                if (memberMappings.Length > 1)
-                {
-                    // More then one mamber mappings found
-                    return null;
-                }
-                if (memberMappings[0] is not MethodDeclarationSyntax memberMapping)
-                {
-                    return null;
-                }
-
-                return new MapTemplateMetadata
-                {
-                    TemplateType = targetTypeSyntax,
-                    TypeParameter = targetTypeSyntax.TypeParameterList.Parameters[0],
-                    MemberMapping = memberMapping
-                };
+                TemplateType = targetTypeSyntax,
+                TypeParameter = targetTypeSyntax.TypeParameterList!.Parameters[0],
+                MemberMapping = (MethodDeclarationSyntax)memberMapping[0]
             }
-            catch (Exception ex)
-            {
-                //context.ReportInternalError(ex, attributeSyntax);
-                return null;
-            }
-        }).WhereNotNull();
+        ), context);
     }
-
-    //private static IncrementalValuesProvider<MapTemplateMetadata> GetMapTemplateTargets(this IncrementalValuesProvider<(MapTemplateMetadata MapTemplate, ImmutableArray<(InvocationExpressionSyntax Invocation, IdentifierNameSyntax InstanceType)> MapTargets)> invocationsPrivder)
-    //{
-    //    return invocationsPrivder.Select((node, token) =>
-    //    {
-    //        var mapTemplate = node.MapTemplate;
-    //        var mapTargets = node.MapTargets
-    //            .Where(x => x.InstanceType.Identifier == mapTemplate.TemplateType.Identifier);
-
-    //        // TODO: return MapConfig and MapTemplate
-    //        return null;
-    //    });
-    //}
 
     public static IncrementalGeneratorInitializationContext CreateMapTemplateUtility(
         this IncrementalGeneratorInitializationContext context)
     {
         var mapTemplatesProvider = context.SyntaxProvider
             .CreateAttributeSyntaxProvider<MapTemplateAttribute>()
-            .GetMapTemplateMetadata();
+            .GetMapTemplateMetadata(context);
 
         var mapSourceTypeProvider = context.SyntaxProvider
             .CreateInvocationExpressionProvider(methodName: "Map", argsCount: 1)
@@ -112,7 +64,7 @@ internal static class MapTemplateSourceGeneratorExtensions
             var sourceTypes = tuple.Left.Right
                 .Where(x => x.InstanceType.Identifier.ValueText == mapTemplate.TemplateType.Identifier.ValueText)
                 .Select(x => {
-                    // TODO: validated fullnames of argument and template types
+                    // TODO: validate full name of argument and template types
                     var argSyntaxNode = x.Invocation.ArgumentList.Arguments.First()!;
                     var semanticModel = compilation.GetSemanticModel(argSyntaxNode.SyntaxTree);
                     return semanticModel.GetTypeInfo(argSyntaxNode.Expression).Type!;
