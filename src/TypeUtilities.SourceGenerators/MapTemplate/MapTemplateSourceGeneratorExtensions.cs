@@ -110,15 +110,17 @@ internal static class MapTemplateSourceGeneratorExtensions
                         mapping.SourceType.DeclaredAccessibility == Accessibility.Public && mapping.MapTemplateType.DeclaredAccessibility == Accessibility.Public
                             ? "public" : "internal";
 
+                    var sourceNamespace = mapping.SourceType.ContainingNamespace.ToString();
+
                     new SourceBuilder()
-                        .AddNamespace(mapping.SourceType.ContainingNamespace.ToString())
-                        .AddLine($"{accessibility} class {mappedTypeName} : {mapTemplateNamespace}.{mapping.MapTemplateType!.Name}<{mapping.SourceType.Name}>")
+                        .AddNamespace(mapTemplateNamespace)
+                        .AddLine($"{accessibility} class {mappedTypeName} : {mapTemplateNamespace}.{mapping.MapTemplateType!.Name}<{sourceNamespace}.{mapping.SourceType.Name}>")
                         .OpenScope()
                             // Add Mapped Members
                             .AddLines(mappedMembersDelarations.Select(x => x.Format).ToArray()!)
                             .AddEmptyLine()
                             // Add Constractor from source
-                            .AddLine($"public {mappedTypeName}({mapping.SourceType.Name} source)")
+                            .AddLine($"public {mappedTypeName}({sourceNamespace}.{mapping.SourceType.Name} source)")
                             .OpenScope()
                                 .AddLines(mappedMembersDelarations
                                     .Select(x => (Source: x.Symbol, Target: SyntaxFactory.ParseMemberDeclaration(x.Format!)?.TryGetIdentifier()))
@@ -133,11 +135,13 @@ internal static class MapTemplateSourceGeneratorExtensions
                     .AddNamespace(name: mapTemplateNamespace, fileScoped: mapTemplate.TemplateType.GetNamespace() is FileScopedNamespaceDeclarationSyntax)
                     .AddLine($"public static class {mapTemplateName}")
                     .OpenScope()
+                        // TODO: use switch map on T instead of throwing
+                        .AddLine($"public static {mapTemplateName}<T> Map<T>(T source) => throw new System.NotImplementedException($\"Missing 'Map' for {{ typeof(T).Name}} type\");\n")
                         .AddLines(mappings
                             .Select(x => x.SourceType)
                             .Select(t => 
-                                $"public static {t.ContainingNamespace}.{mapTemplateName}Of{t.Name} Map({t.ContainingNamespace}.{t.Name} source)" +
-                                $" => new {t.ContainingNamespace}.{mapTemplateName}Of{t.Name}(source);\n"))
+                                $"public static {mapTemplateName}Of{t.Name} Map({t.ContainingNamespace}.{t.Name} source)" +
+                                $" => new {mapTemplateName}Of{t.Name}(source);\n"))
                     .CloseScope()
                     .Build($"{mapTemplate.TemplateType.Identifier}.factory.g.cs", context);
             },
