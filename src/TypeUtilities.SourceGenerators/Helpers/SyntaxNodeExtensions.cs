@@ -10,7 +10,7 @@ namespace TypeUtilities.SourceGenerators.Helpers
 {
     internal static class SyntaxNodeExtensions
     {
-        public static bool TryCompileNamedTypeSymbol(this SyntaxNode syntax, Compilation compilation, CancellationToken token, [NotNullWhen(true)] out INamedTypeSymbol? result)
+        public static bool TryCompileNamedTypeSymbolDeclaration(this SyntaxNode syntax, Compilation compilation, CancellationToken token, [NotNullWhen(true)] out INamedTypeSymbol? result)
         {
             result = null;
             var semanticModel = compilation.GetSemanticModel(syntax.SyntaxTree);
@@ -21,6 +21,16 @@ namespace TypeUtilities.SourceGenerators.Helpers
 
             result = namedTypeSymbol;
             return true;
+        }
+
+        public static ISyntaxResult<INamedTypeSymbol> CompileNamedTypeSymbolDeclaration(this SyntaxNode syntax, Compilation compilation, CancellationToken token)
+        {
+            if (TryCompileNamedTypeSymbolDeclaration(syntax, compilation, token, out var result))
+            {
+                return SyntaxResult.Ok(result);
+            }
+            // TODO: add diagnostic message
+            return SyntaxResult.Skip<INamedTypeSymbol>();
         }
 
         public static ISymbol? GetSymbol(this SyntaxNode syntaxNode, Compilation compilation, CancellationToken token)

@@ -107,5 +107,24 @@ namespace TypeUtilities.SourceGenerators.Models
             => Map(source, outer => mapFn(outer).Map(inner => resultFn(outer, inner)));
 
         public static ISyntaxResult<T> AsSyntaxResult<T>(this T result) => SyntaxResult.Ok(result);
+
+        public static void Unwrap<T>(this ISyntaxResult<T> result, Action<T> action, SourceProductionContext context)
+        {
+            if (result.IsDiagnostic)
+                context.ReportDiagnostic(result.Diagnostic!);
+
+            if (result.IsSuccess)
+                action(result.Result!);
+        }
+
+        public static IEnumerable<T> Unwrap<T>(this IEnumerable<ISyntaxResult<T>> results, SourceProductionContext context)
+        {
+            foreach (var dR in results.Where(r => r.IsDiagnostic))
+            {
+                context.ReportDiagnostic(dR.Diagnostic!);
+            }
+
+            return results.Where(x => x.IsSuccess).Select(x => x.Result!);
+        }
     }
 }

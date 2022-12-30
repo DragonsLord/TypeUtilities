@@ -52,24 +52,6 @@ namespace TypeUtilities.SourceGenerators.Helpers
 
     internal static class PrintableMember
     {
-        public static Action<SourceBuilder> FromSourceLines(params string[] srcLines)
-        {
-            return sourceBuilder => sourceBuilder.AddLines(srcLines);
-        }
-
-        public static Action<SourceBuilder> FunctionSource(string functionDeclaration, params string[] srcBodyLines)
-        {
-            return sourceBuilder =>
-            {
-                sourceBuilder.AddLine(functionDeclaration);
-                sourceBuilder.OpenScope();
-                sourceBuilder.AddLines(srcBodyLines);
-                sourceBuilder.CloseScope();
-            };
-        }
-
-        public static Action<SourceBuilder> EmptyLine() => sourceBuilder => sourceBuilder.AddLine(string.Empty);
-
         public static Action<SourceBuilder> FromSymbol(ISymbol? symbol, string format)
         {
             var declaration = MemberFormat.FormatDeclaration(symbol, format);
@@ -84,6 +66,7 @@ namespace TypeUtilities.SourceGenerators.Helpers
         }
     }
 
+    //TODO: remove and use SourceBuilder directly
     internal static class SourceOutputExtensions
     {
         public static void WriteType(

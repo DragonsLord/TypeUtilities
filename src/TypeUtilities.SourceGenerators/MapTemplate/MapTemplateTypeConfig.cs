@@ -1,6 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
 using TypeUtilities.Abstractions;
 using TypeUtilities.SourceGenerators.Helpers;
+using TypeUtilities.SourceGenerators.Models;
 
 namespace TypeUtilities.SourceGenerators.MapTemplate;
 
@@ -40,17 +41,18 @@ internal class MapTemplateConfig
             .FilterKind(MemberKindSelection);
     }
 
-    public static MapTemplateConfig? Create(INamedTypeSymbol templateTypeSymbol)
+    public static ISyntaxResult<MapTemplateConfig> Create(INamedTypeSymbol templateTypeSymbol)
     {
         var attributeData = templateTypeSymbol.GetAttributeData<MapTemplateAttribute>();
 
         if (attributeData is null)
-            return null;
+            // TODO: add diagnostic
+            return SyntaxResult.Skip<MapTemplateConfig>();
 
-        return Create(templateTypeSymbol.Name, attributeData);
+        return SyntaxResult.Ok(Create(templateTypeSymbol.Name, attributeData));
     }
 
-    public static MapTemplateConfig? Create(string templateName, AttributeData attributeData)
+    public static MapTemplateConfig Create(string templateName, AttributeData attributeData)
     {
         var namedArgs = attributeData.NamedArguments.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
 

@@ -9,50 +9,38 @@ namespace TypeUtilities.SourceGenerators.MapTemplate;
 
 internal static class MapTemplateSourceGeneratorExtensions
 {
-    class MapTemplateMetadata
-    {
-        public TypeDeclarationSyntax TemplateType { get; set; }
-        public TypeParameterSyntax TypeParameter { get; set; }
-        public MethodDeclarationSyntax MemberMapping { get; set; }
-    }
-
-    private static IncrementalValuesProvider<MapTemplateMetadata> GetMapTemplateMetadata(this IncrementalValuesProvider<AttributeSyntax> attributeSyntaxProvider, IncrementalGeneratorInitializationContext context)
-    {
-        return attributeSyntaxProvider.SelectFromSyntax((attributeSyntax, token) =>
-        (
-            from targetTypeSyntax in attributeSyntax
-                    .FindParent<TypeDeclarationSyntax>(token)
-                    .Where(x => x.Modifiers.Any(m => m.ValueText == "partial"), Diagnostics.MissingPartialModifier)
-                    .Where(x => x.TypeParameterList is not null, Diagnostics.MissingTypeParameter)
-                    .Where(x => x.TypeParameterList!.Parameters.Count == 1, Diagnostics.MoreThenOneTypeParameter)
-            from memberMapping in targetTypeSyntax.Members
-                    .Where(member => member.AttributeLists.SelectMany(x => x.Attributes).Any(x => x.Is<MemberMappingAttribute>()))
-                    .ToArray().AsSyntaxResult()
-                    .Where(x => x.Any(), Diagnostics.MissingMemberMapping(targetTypeSyntax))
-                    .Where(x => x.Length == 1, x => Diagnostics.MoreThenOneMemberMapping(targetTypeSyntax, x))
-                    .Where(x => x[0] is MethodDeclarationSyntax) //TODO: only mathod is supported for member mapping Diagnostic ?
-            select new MapTemplateMetadata
-            {
-                TemplateType = targetTypeSyntax,
-                TypeParameter = targetTypeSyntax.TypeParameterList!.Parameters[0],
-                MemberMapping = (MethodDeclarationSyntax)memberMapping[0]
-            }
-        ), context);
-    }
-
     public static IncrementalGeneratorInitializationContext CreateMapTemplateUtility(
         this IncrementalGeneratorInitializationContext context)
     {
-        var mapTemplatesProvider = context.SyntaxProvider
-            .CreateAttributeSyntaxProvider<MapTemplateAttribute>()
-            .GetMapTemplateMetadata(context);
-
-        var mapSourceTypeProvider = context.SyntaxProvider
+        var mapInvocationsProvider = context.SyntaxProvider
             .CreateInvocationExpressionProvider(methodName: "Map", argsCount: 1)
             .Collect();
 
+        var mapTemplatesProvider = context.SyntaxProvider
+            .CreateAttributeSyntaxProvider<MapTemplateAttribute>()
+            .SelectFromSyntax((attributeSyntax, token) =>
+            (
+                from targetTypeSyntax in attributeSyntax
+                        .FindParent<TypeDeclarationSyntax>(token)
+                        .Where(x => x.Modifiers.Any(m => m.ValueText == "partial"), Diagnostics.MissingPartialModifier)
+                        .Where(x => x.TypeParameterList is not null, Diagnostics.MissingTypeParameter)
+                        .Where(x => x.TypeParameterList!.Parameters.Count == 1, Diagnostics.MoreThenOneTypeParameter)
+                from memberMapping in targetTypeSyntax.Members
+                        .Where(member => member.AttributeLists.SelectMany(x => x.Attributes).Any(x => x.Is<MemberMappingAttribute>()))
+                        .ToArray().AsSyntaxResult()
+                        .Where(x => x.Any(), Diagnostics.MissingMemberMapping(targetTypeSyntax))
+                        .Where(x => x.Length == 1, x => Diagnostics.MoreThenOneMemberMapping(targetTypeSyntax, x))
+                        .Where(x => x[0] is MethodDeclarationSyntax) //TODO: only mathod is supported for member mapping Diagnostic ?
+                select
+                (
+                    TemplateType: targetTypeSyntax,
+                    TypeParameter: targetTypeSyntax.TypeParameterList!.Parameters[0],
+                    MemberMapping: (MethodDeclarationSyntax)memberMapping[0]
+                )
+            ), context);
+
         var attributes = mapTemplatesProvider
-            .Combine(mapSourceTypeProvider)
+            .Combine(mapInvocationsProvider)
             .Combine(context.CompilationProvider);
 
         context.RegisterSourceOutput(attributes, static (context, tuple) =>
@@ -61,89 +49,99 @@ internal static class MapTemplateSourceGeneratorExtensions
 
             var compilation = tuple.Right!;
             var mapTemplate = tuple.Left.Left!;
-            var sourceTypes = tuple.Left.Right
-                .Where(x => x.InstanceType.Identifier.ValueText == mapTemplate.TemplateType.Identifier.ValueText)
-                .Select(x => {
-                    // TODO: validate full name of argument and template types
-                    var argSyntaxNode = x.Invocation.ArgumentList.Arguments.First()!;
-                    var semanticModel = compilation.GetSemanticModel(argSyntaxNode.SyntaxTree);
-                    return semanticModel.GetTypeInfo(argSyntaxNode.Expression).Type!;
-                })
-                .Where(x => x is not null)
-                .ToArray()!;
+            var invocations = tuple.Left.Right!;
 
-            if (!mapTemplate.TemplateType.TryCompileNamedTypeSymbol(compilation, token, out var namedTemplateSymbol))
+            var mappingsResult = (
+                from mapTemplateType in mapTemplate.TemplateType.CompileNamedTypeSymbolDeclaration(compilation, token)
+                from config in MapTemplateConfig.Create(mapTemplateType)
+                select invocations
+                    .Where(x => x.InstanceType.Identifier.ValueText == mapTemplate.TemplateType.Identifier.ValueText)
+                    .Select(x =>
+                    {
+                        var semanticModel = compilation.GetSemanticModel(x.Invocation.SyntaxTree);
+                        if (mapTemplateType.Equals(semanticModel.GetTypeInfo(x.InstanceType, token).Type, SymbolEqualityComparer.Default))
+                        {
+                            var arg = x.Invocation.ArgumentList.Arguments.First()!;
+                            return semanticModel.GetTypeInfo(arg.Expression, token).Type!;
+                        }
+                        return null;
+                    })
+                    .Where(x => x is INamedTypeSymbol) // TODO:add diagnostics
+                    .Cast<INamedTypeSymbol>()
+                    .Select(mappingSource =>
+                    {
+                        var members = config.GetMembers(mappingSource);
+                        if (members is null || !members.Any())
+                        {
+                            //TODO: Warning Diagnostics
+                            SyntaxResult.Skip<(string, ISymbol[], INamedTypeSymbol, INamedTypeSymbol)>();
+                        }
+
+                        return SyntaxResult.Ok((
+                            MemberDeclarationFormat: config.MemberDeclarationFormat,
+                            SourceMembers: members.ToArray(),
+                            SourceType: mappingSource,
+                            MapTemplateType: mapTemplateType
+                        ));
+                    })
+                    .Unwrap(context)
+                    .ToArray()
+            );
+
+            mappingsResult.Unwrap(mappings =>
             {
-                //TODO: Add Diagnostic
-                return;
-            }
+                if (!mappings.Any())
+                    return;
 
-            var config = MapTemplateConfig.Create(namedTemplateSymbol);
+                var mapFnName = mapTemplate.MemberMapping.Identifier.ValueText;
+                var mapTemplateNamespace = mappings[0].MapTemplateType.ContainingNamespace.ToString();
+                var mapTemplateName = mapTemplate.TemplateType.Identifier.ValueText;
 
-            if (config is null)
-            {
-                return;
-            }
-
-            foreach (var mappingSource in sourceTypes)
-            {
-                if (mappingSource is not INamedTypeSymbol sourceTypeSymbol)
+                foreach (var mapping in mappings)
                 {
-                    //TODO: only named types is supported
-                    continue;
+                    var mappedTypeName = $"{mapTemplateName}Of{mapping.SourceType.Name}";
+
+                    var mappedMembersDelarations = mapping.SourceMembers
+                        .Select(x => (Symbol: x, Format: MemberFormat.FormatDeclaration(x, mapping.MemberDeclarationFormat)))
+                        .Where(x => x.Format != null)
+                        .ToArray();
+
+                    var accessibility =
+                        mapping.SourceType.DeclaredAccessibility == Accessibility.Public && mapping.MapTemplateType.DeclaredAccessibility == Accessibility.Public
+                            ? "public" : "internal";
+
+                    new SourceBuilder()
+                        .AddNamespace(mapping.SourceType.ContainingNamespace.ToString())
+                        .AddLine($"{accessibility} class {mappedTypeName} : {mapTemplateNamespace}.{mapping.MapTemplateType!.Name}<{mapping.SourceType.Name}>")
+                        .OpenScope()
+                            // Add Mapped Members
+                            .AddLines(mappedMembersDelarations.Select(x => x.Format).ToArray()!)
+                            .AddEmptyLine()
+                            // Add Constractor from source
+                            .AddLine($"public {mappedTypeName}({mapping.SourceType.Name} source)")
+                            .OpenScope()
+                                .AddLines(mappedMembersDelarations
+                                    .Select(x => (Source: x.Symbol, Target: SyntaxFactory.ParseMemberDeclaration(x.Format!)?.TryGetIdentifier()))
+                                    .Where(x => x.Target is not null)
+                                    .Select(x => $"this.{x.Target} = {mapFnName}(\"{x.Source.Name}\", source.{x.Source.Name});"))
+                            .CloseScope()
+                        .CloseScope()
+                        .Build($"{mappedTypeName}.g.cs", context);
                 }
 
-                var sourceMembers = config.GetMembers(mappingSource);
-
-                if (sourceMembers is null)
-                {
-                    //TODO: Diagnostics
-                    continue;
-                }
-
-                var mappedMembersDelarations = sourceMembers.Select(x => (Symbol: x, Format: MemberFormat.FormatDeclaration(x, config.MemberDeclarationFormat))).Where(x => x.Format != null).ToArray();
-
-                var mappedTypeName = $"{mapTemplate.TemplateType.Identifier.ValueText}Of{sourceTypeSymbol.Name}";
-
-                var mappedTypeDeclaration = mapTemplate.TemplateType
-                    // TODO: overwrite modifiers?
-                    .WithIdentifier(SyntaxFactory.Identifier(mappedTypeName))
-                    // TODO: include namespace to base class
-                    .WithBaseList(SyntaxFactory.BaseList(SyntaxFactory.SingletonSeparatedList<BaseTypeSyntax>(SyntaxFactory.SimpleBaseType(SyntaxFactory.ParseTypeName($"{mapTemplate.TemplateType.Identifier.ValueText}<{sourceTypeSymbol.Name}>")))))
-                    .WithTypeParameterList(null)
-                    // TODO: Extension to get full Namespace
-                    .WithNamespace(SyntaxFactory.NamespaceDeclaration(SyntaxFactory.IdentifierName(namedTemplateSymbol.ContainingNamespace.Name))); 
-
-                var ctorMember = PrintableMember.FunctionSource(
-                    $"public {mappedTypeName}({sourceTypeSymbol.Name} source)",
-                    mappedMembersDelarations
-                        .Select(x => (Source: x.Symbol, Target: SyntaxFactory.ParseMemberDeclaration(x.Format!)?.TryGetIdentifier()))
-                        .Where(x => x.Target is not null)
-                        .Select(x =>
-                            $"this.{x.Target} = {mapTemplate.MemberMapping.Identifier.ValueText}(\"{x.Source.Name}\", source.{x.Source.Name});").ToArray()
-                );
-
-                var members = mappedMembersDelarations.Select(x => PrintableMember.FromSourceLines(x.Format!)).Concat(new[] { PrintableMember.EmptyLine(), ctorMember });
-
-                context.WriteType(mappedTypeDeclaration, members, $"{mappedTypeName}.g.cs", token);
-            }
-
-            var factoryMethods =
-            //new[]{ PrintableMember.FromSourceLines($"public static {mapTemplate.TemplateType.Identifier}<T> Map<T>(T source) => throw new NotImplementedException($\"Missing 'Map' for {{typeof(T).Name}} type\");") }
-            sourceTypes.Select(t =>
-                // FIXME: ContainingNamespace is not a full namespace
-                PrintableMember.FromSourceLines(
-                    $"public static {t.ContainingNamespace.Name}.{mapTemplate.TemplateType.Identifier}Of{t.Name} Map({t.ContainingNamespace.Name}.{t.Name} source) => new {t.ContainingNamespace.Name}.{mapTemplate.TemplateType.Identifier}Of{t.Name}(source);"));
-
-            var factoryClassDeclaration = mapTemplate.TemplateType
-                        .WithTypeParameterList(null)
-                        .WithModifiers(SyntaxFactory.TokenList(
-                            SyntaxFactory.Token(SyntaxKind.PublicKeyword),
-                            SyntaxFactory.Token(SyntaxTriviaList.Create(SyntaxFactory.SyntaxTrivia(SyntaxKind.WhitespaceTrivia, " ")), SyntaxKind.StaticKeyword, SyntaxTriviaList.Empty)))
-                         //FIXME? This is only working when the last one
-                        .WithNamespace(mapTemplate.TemplateType.GetNamespace(token));  // FIXME: this should be a FULL namespace
-
-            context.WriteType(factoryClassDeclaration, factoryMethods, $"{mapTemplate.TemplateType.Identifier}.factory.g.cs", token);
+                new SourceBuilder()
+                    .AddNamespace(name: mapTemplateNamespace, fileScoped: mapTemplate.TemplateType.GetNamespace() is FileScopedNamespaceDeclarationSyntax)
+                    .AddLine($"public static class {mapTemplateName}")
+                    .OpenScope()
+                        .AddLines(mappings
+                            .Select(x => x.SourceType)
+                            .Select(t => 
+                                $"public static {t.ContainingNamespace}.{mapTemplateName}Of{t.Name} Map({t.ContainingNamespace}.{t.Name} source)" +
+                                $" => new {t.ContainingNamespace}.{mapTemplateName}Of{t.Name}(source);\n"))
+                    .CloseScope()
+                    .Build($"{mapTemplate.TemplateType.Identifier}.factory.g.cs", context);
+            },
+            context);                
         });
 
         return context;
@@ -157,15 +155,5 @@ internal static class MapTemplateSourceGeneratorExtensions
             FieldDeclarationSyntax field => field.Declaration.Variables.FirstOrDefault()?.Identifier,
             _ => null
         };
-    }
-
-    private static T WithNamespace<T>(this T thisNode, BaseNamespaceDeclarationSyntax? namespaceNode)
-        where T : MemberDeclarationSyntax
-    {
-        if (namespaceNode is not null)
-        {
-            return (T)namespaceNode.WithMembers(SyntaxFactory.SingletonList<MemberDeclarationSyntax>(thisNode)).Members.First();
-        }
-        return thisNode;
     }
 }

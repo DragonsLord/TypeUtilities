@@ -27,7 +27,7 @@ internal static class MapSourceGeneratorExtensions
                 return;
             }
 
-            if (!targetTypeSyntax.TryCompileNamedTypeSymbol(compilation, token, out var targetTypeSymbol))
+            if (!targetTypeSyntax.TryCompileNamedTypeSymbolDeclaration(compilation, token, out var targetTypeSymbol))
                 return;
 
             var config = getConfig(targetTypeSymbol);

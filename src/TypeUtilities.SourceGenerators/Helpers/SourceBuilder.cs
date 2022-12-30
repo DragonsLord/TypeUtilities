@@ -1,5 +1,6 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Text;
 using System.Text;
 
 namespace TypeUtilities.SourceGenerators.Helpers
@@ -33,7 +34,15 @@ namespace TypeUtilities.SourceGenerators.Helpers
             return this;
         }
 
-        public SourceBuilder AddLines(params string[] lines)
+        public SourceBuilder AddEmptyLine()
+        {
+            _stringBuilder.AppendLine();
+            return this;
+        }
+
+        public SourceBuilder AddLines(params string[] lines) => AddLines((IEnumerable<string>)lines);
+
+        public SourceBuilder AddLines(IEnumerable<string> lines)
         {
             foreach (var line in lines) AddLine(line);
             return this;
@@ -62,6 +71,11 @@ namespace TypeUtilities.SourceGenerators.Helpers
                 CloseScope();
             }
             return _stringBuilder.ToString().Replace("\r\n", "\n").Replace("\n", Environment.NewLine);
+        }
+
+        public void Build(string sourceName, SourceProductionContext context)
+        {
+            context.AddSource(sourceName, SourceText.From(Build(), Encoding.Unicode));
         }
     }
 }
