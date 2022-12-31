@@ -14,4 +14,27 @@ namespace TypeUtilities
 
     [AttributeUsage(AttributeTargets.Method)]
     public class MemberMappingAttribute : Attribute { }
+
+    public class MemberInfo
+    {
+        public string Name { get; set; }
+        public Type Type { get; set; }
+        public MemberAccessibilityFlags Accessibility { get; set; }
+        public MemberScopeFlags Scope { get; set; }
+        public MemberKindFlags Kind { get; set; }
+
+        private MemberInfo(string name, Type type, MemberAccessibilityFlags accessibility, MemberScopeFlags scope, MemberKindFlags kind)
+        {
+            Name = name;
+            Type = type;
+            Accessibility = accessibility;
+            Scope = scope;
+            Kind = kind;
+        }
+
+        public static MemberInfo Create<T>(string name, MemberAccessibilityFlags accessibility, MemberScopeFlags scope, MemberKindFlags kind)
+        {
+            return new MemberInfo(name, typeof(T), accessibility, scope, kind);
+        }
+    }
 }

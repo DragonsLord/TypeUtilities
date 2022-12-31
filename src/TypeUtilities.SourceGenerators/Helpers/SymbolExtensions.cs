@@ -51,5 +51,7 @@ namespace TypeUtilities.SourceGenerators.Helpers
 
             return "{" + get + set + " }";
         }
+
+        public static string GetFullName(this ITypeSymbol? typeSymbol) => typeSymbol is not null ? $"{typeSymbol.ContainingNamespace}.{typeSymbol.Name}" : string.Empty;
     }
 }
