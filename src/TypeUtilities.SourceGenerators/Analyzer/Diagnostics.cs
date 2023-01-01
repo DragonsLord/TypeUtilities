@@ -129,5 +129,18 @@ namespace TypeUtilities.SourceGenerators.Analyzer
         //TODO: test
         public static Diagnostic MoreThenOneMemberMapping(TypeDeclarationSyntax templateType, MemberDeclarationSyntax[] mappings)
             => Diagnostic.Create(_moreThenOneMemberMapping, templateType.GetLocation(), mappings.Select(x => x.GetLocation()), templateType.Identifier);
+
+        private static readonly DiagnosticDescriptor _incorrectMemberMappingSignature = new(
+            id: "TU009",
+            title: "Incorrect member mapping signature",
+            messageFormat: "Member mapping {0} should have '{0}<T>(MemberInfo memberInfo, T value)' signature",
+            description: "Member mapping should have a correct signature",
+            category: "TypeUtilities",
+            defaultSeverity: DiagnosticSeverity.Error,
+            isEnabledByDefault: true);
+
+        //TODO: test
+        public static Diagnostic IncorrectMemberMappingSignature(MethodDeclarationSyntax methodDeclaration)
+            => Diagnostic.Create(_incorrectMemberMappingSignature, methodDeclaration.Identifier.GetLocation(), methodDeclaration.Identifier.ValueText);
     }
 }

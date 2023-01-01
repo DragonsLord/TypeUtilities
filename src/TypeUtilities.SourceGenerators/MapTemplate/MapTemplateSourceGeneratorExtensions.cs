@@ -20,7 +20,6 @@ internal static class MapTemplateSourceGeneratorExtensions
         var mapTemplatesProvider = context.SyntaxProvider
             .CreateAttributeSyntaxProvider<MapTemplateAttribute>()
             .SelectFromSyntax((attributeSyntax, token) =>
-            (
                 from targetTypeSyntax in attributeSyntax
                         .FindParent<TypeDeclarationSyntax>(token)
                         .Where(x => x.TypeParameterList is not null, Diagnostics.MissingTypeParameter)
@@ -30,15 +29,22 @@ internal static class MapTemplateSourceGeneratorExtensions
                         .ToArray().AsSyntaxResult()
                         .Where(x => x.Any(), Diagnostics.MissingMemberMapping(targetTypeSyntax))
                         .Where(x => x.Length == 1, x => Diagnostics.MoreThenOneMemberMapping(targetTypeSyntax, x))
-                        // TODO: validate method signature
-                        .Where(x => x[0] is MethodDeclarationSyntax) //TODO: only mathod is supported for member mapping Diagnostic ?
+                        //TODO: only method is supported for member mapping Diagnostic ?
+                        .Map(x => x[0] is MethodDeclarationSyntax method ? SyntaxResult.Ok(method) : SyntaxResult.Skip<MethodDeclarationSyntax>())
+                        // Signature Validation, TODO: create a validator?
+                        .Where(method =>
+                            (method.TypeParameterList is not null && method.TypeParameterList.Parameters.Count == 1) &&
+                            (method.ParameterList.Parameters.Count == 2) &&
+                            (method.ParameterList.Parameters[0].Type is IdentifierNameSyntax firstArgType && firstArgType.Identifier.ValueText == nameof(MemberInfo)) &&
+                            (method.ParameterList.Parameters[1].Type is IdentifierNameSyntax secondArgType && secondArgType.Identifier.ValueText == method.TypeParameterList.Parameters[0].Identifier.ValueText),
+                            Diagnostics.IncorrectMemberMappingSignature)
                 select
                 (
                     TemplateType: targetTypeSyntax,
                     TypeParameter: targetTypeSyntax.TypeParameterList!.Parameters[0],
-                    MemberMapping: (MethodDeclarationSyntax)memberMapping[0]
+                    MemberMapping: memberMapping
                 )
-            ), context);
+            , context);
 
         var attributes = mapTemplatesProvider
             .Combine(mapInvocationsProvider)
@@ -52,7 +58,7 @@ internal static class MapTemplateSourceGeneratorExtensions
             var mapTemplate = tuple.Left.Left!;
             var invocations = tuple.Left.Right!;
 
-            var mappingsResult = (
+            var mappingsResult = 
                 from mapTemplateType in mapTemplate.TemplateType.CompileNamedTypeSymbolDeclaration(compilation, token)
                 from config in MapTemplateConfig.Create(mapTemplateType)
                 select invocations
@@ -86,8 +92,7 @@ internal static class MapTemplateSourceGeneratorExtensions
                         ));
                     })
                     .Unwrap(context)
-                    .ToArray()
-            );
+                    .ToArray();
 
             mappingsResult.Unwrap(mappings =>
             {
